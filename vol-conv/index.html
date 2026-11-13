@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volume Converter</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #172033;
+}
+
+.container { max-width: 900px; margin: auto; }
+
+h1 { text-align: center; color: #2563eb; }
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 28px;
+}
+
+.input-box {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 14px 0 9px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+input:focus, select:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.result {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px #0000000b;
+    min-width: 0;
+}
+
+.unit {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.value {
+    font-size: 19px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+button {
+    border: none;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover { background: #dbeafe; }
+
+.section-title { margin: 28px 0 14px; }
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Volume Converter</h1>
+
+<div class="subtitle">
+Select any base unit and convert it into all other volume units.
+</div>
+
+<div class="input-box">
+
+<label for="baseUnit">Select Base Unit</label>
+<select id="baseUnit"></select>
+
+<label for="inputValue">Enter Value</label>
+<input type="number" id="inputValue"
+value="1" step="any" placeholder="Enter volume">
+
+<p style="color:#64748b;font-size:13px">
+Conversions update automatically.
+</p>
+
+</div>
+
+<h3 class="section-title">Conversion Results</h3>
+
+<div class="results" id="results"></div>
+
+<div class="footer">
+Volume Converter | Metric, Imperial and US Units
+</div>
+
+</div>
+
+<script>
+
+// All conversion factors are expressed in cubic metres.
+const units = [
+{name:"Cubic Kilometre",symbol:"km³",factor:1e9},
+{name:"Cubic Metre",symbol:"m³",factor:1},
+{name:"Cubic Decimetre",symbol:"dm³",factor:0.001},
+{name:"Cubic Centimetre",symbol:"cm³",factor:1e-6},
+{name:"Cubic Millimetre",symbol:"mm³",factor:1e-9},
+
+{name:"Kilolitre",symbol:"kL",factor:1},
+{name:"Hectolitre",symbol:"hL",factor:0.1},
+{name:"Decalitre",symbol:"daL",factor:0.01},
+{name:"Litre",symbol:"L",factor:0.001},
+{name:"Decilitre",symbol:"dL",factor:0.0001},
+{name:"Centilitre",symbol:"cL",factor:0.00001},
+{name:"Millilitre",symbol:"mL",factor:1e-6},
+{name:"Microlitre",symbol:"µL",factor:1e-9},
+
+{name:"US Gallon",symbol:"US gal",factor:0.003785411784},
+{name:"US Quart",symbol:"US qt",factor:0.000946352946},
+{name:"US Pint",symbol:"US pt",factor:0.000473176473},
+{name:"US Cup",symbol:"US cup",factor:0.0002365882365},
+{name:"US Fluid Ounce",symbol:"US fl oz",factor:0.0000295735295625},
+{name:"US Tablespoon",symbol:"US tbsp",factor:0.00001478676478125},
+{name:"US Teaspoon",symbol:"US tsp",factor:0.00000492892159375},
+
+{name:"Imperial Gallon",symbol:"Imp gal",factor:0.00454609},
+{name:"Imperial Quart",symbol:"Imp qt",factor:0.0011365225},
+{name:"Imperial Pint",symbol:"Imp pt",factor:0.00056826125},
+{name:"Imperial Fluid Ounce",symbol:"Imp fl oz",factor:0.0000284130625},
+
+{name:"Cubic Foot",symbol:"ft³",factor:0.028316846592},
+{name:"Cubic Inch",symbol:"in³",factor:0.000016387064},
+{name:"Cubic Yard",symbol:"yd³",factor:0.764554857984},
+
+{name:"Barrel (US oil)",symbol:"bbl",factor:0.158987294928},
+{name:"Acre-foot",symbol:"ac-ft",factor:1233.48183754752}
+];
+
+const baseSelect = document.getElementById("baseUnit");
+const input = document.getElementById("inputValue");
+const results = document.getElementById("results");
+
+// Populate dropdown
+units.forEach((unit,index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = unit.name + " (" + unit.symbol + ")";
+
+    if(unit.symbol === "L") option.selected = true;
+
+    baseSelect.appendChild(option);
+});
+
+function formatNumber(number) {
+    if(!Number.isFinite(number)) return "Out of range";
+
+    return Number(number.toPrecision(12)).toLocaleString(
+        "en-US",
+        {maximumSignificantDigits:12}
+    );
+}
+
+function convert() {
+    results.innerHTML = "";
+
+    const value = Number(input.value);
+    const base = units[Number(baseSelect.value)];
+
+    if(input.value.trim() === "" || !Number.isFinite(value)) {
+        results.textContent = "Please enter a valid number.";
+        return;
+    }
+
+    // Convert input into cubic metres.
+    const cubicMetres = value * base.factor;
+
+    units.forEach(unit => {
+
+        // Skip selected base unit.
+        if(unit.symbol === base.symbol) return;
+
+        // Convert cubic metres into target unit.
+        const converted = cubicMetres / unit.factor;
+
+        const card = document.createElement("div");
+        card.className = "result";
+
+        const label = document.createElement("div");
+        label.className = "unit";
+        label.textContent = unit.name + " (" + unit.symbol + ")";
+
+        const row = document.createElement("div");
+        row.className = "value-row";
+
+        const output = document.createElement("div");
+        output.className = "value";
+        output.textContent = formatNumber(converted);
+
+        const copy = document.createElement("button");
+        copy.textContent = "Copy";
+        copy.type = "button";
+
+        copy.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(String(converted));
+                copy.textContent = "Copied!";
+                setTimeout(() => copy.textContent = "Copy", 1200);
+            } catch {
+                copy.textContent = "Unavailable";
+            }
+        });
+
+        row.appendChild(output);
+        row.appendChild(copy);
+
+        card.appendChild(label);
+        card.appendChild(row);
+
+        results.appendChild(card);
+    });
+}
+
+input.addEventListener("input", convert);
+baseSelect.addEventListener("change", convert);
+
+convert();
+
+</script>
+</body>
+</html>
