@@ -38,7 +38,7 @@ h1{
     margin-bottom:20px;
 }
 
-input,select{
+input, select{
     width:100%;
     padding:10px;
     border:1px solid #cbd5e1;
@@ -62,7 +62,6 @@ button{
 table{
     width:100%;
     border-collapse:collapse;
-    background:white;
 }
 
 th{
@@ -70,14 +69,17 @@ th{
     color:white;
 }
 
-th,td{
+th, td{
     border:1px solid #dce2ea;
     padding:8px;
-    text-align:left;
 }
 
-td.value{
+td:last-child{
     text-align:right;
+}
+
+.favorite{
+    background:#fff8dc;
 }
 
 .star{
@@ -86,19 +88,14 @@ td.value{
 }
 
 .move{
-    border:none;
     background:none;
+    border:none;
     cursor:pointer;
-    font-size:16px;
 }
 
-.favorite-row{
-    background:#fff8dc;
-}
-
-.small{
-    color:#666;
-    font-size:12px;
+.status{
+    color:#555;
+    margin-top:10px;
 }
 
 @media(max-width:800px){
@@ -108,6 +105,7 @@ td.value{
 }
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -125,22 +123,33 @@ td.value{
 
 <div>
 <label>Base Currency</label>
-<select id="base"></select>
+<select id="base">
+<option value="USD">USD</option>
+<option value="INR" selected>INR</option>
+<option value="EUR">EUR</option>
+<option value="GBP">GBP</option>
+<option value="JPY">JPY</option>
+<option value="AUD">AUD</option>
+<option value="CAD">CAD</option>
+<option value="CHF">CHF</option>
+<option value="SGD">SGD</option>
+<option value="AED">AED</option>
+</select>
 </div>
 
 <div>
-<label>Search Currency</label>
-<input id="search" placeholder="e.g. USD, INR, AED">
+<label>Search</label>
+<input id="search" placeholder="USD, INR, EUR...">
 </div>
 
 </div>
 
-<button class="action-btn" onclick="convertAll()">
+<button class="action-btn" onclick="loadRates()">
 Refresh Rates
 </button>
 
-<p class="small" id="status">
-Loading...
+<p id="status" class="status">
+Loading rates...
 </p>
 
 </div>
@@ -153,13 +162,13 @@ Loading...
 <tr>
 <th>Fav</th>
 <th>Move</th>
-<th>Code</th>
 <th>Currency</th>
 <th>Value</th>
 </tr>
 </thead>
 
-<tbody id="results"></tbody>
+<tbody id="results">
+</tbody>
 
 </table>
 
@@ -169,168 +178,111 @@ Loading...
 
 <script>
 
-const currencyNames = {
-USD:"US Dollar",
-EUR:"Euro",
-GBP:"British Pound",
-INR:"Indian Rupee",
-AED:"UAE Dirham",
-AUD:"Australian Dollar",
-CAD:"Canadian Dollar",
-CHF:"Swiss Franc",
-CNY:"Chinese Yuan",
-HKD:"Hong Kong Dollar",
-JPY:"Japanese Yen",
-KRW:"South Korean Won",
-NZD:"New Zealand Dollar",
-SGD:"Singapore Dollar",
-THB:"Thai Baht",
-ZAR:"South African Rand",
-SEK:"Swedish Krona",
-NOK:"Norwegian Krone",
-DKK:"Danish Krone",
-PLN:"Polish Zloty",
-CZK:"Czech Koruna",
-HUF:"Hungarian Forint",
-TRY:"Turkish Lira",
-BRL:"Brazilian Real",
-MXN:"Mexican Peso",
-ARS:"Argentine Peso",
-IDR:"Indonesian Rupiah",
-MYR:"Malaysian Ringgit",
-PHP:"Philippine Peso",
-VND:"Vietnamese Dong",
-SAR:"Saudi Riyal",
-QAR:"Qatari Riyal",
-KWD:"Kuwaiti Dinar",
-BHD:"Bahraini Dinar",
-OMR:"Omani Rial",
-ILS:"Israeli Shekel",
-EGP:"Egyptian Pound",
-PKR:"Pakistani Rupee",
-BDT:"Bangladeshi Taka"
-};
-
-let rates={};
-
-let favorites=
+let rates = {};
+let order = [];
+let favorites =
 JSON.parse(localStorage.getItem("favorites") || "[]");
 
-let order=
-JSON.parse(localStorage.getItem("order") || "[]");
-
 function saveData(){
-localStorage.setItem("favorites",
-JSON.stringify(favorites));
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(favorites)
+    );
 
-localStorage.setItem("order",
-JSON.stringify(order));
+    localStorage.setItem(
+        "currencyOrder",
+        JSON.stringify(order)
+    );
 }
 
-function setupCurrencies(){
+function toggleFavorite(code){
 
-const base=document.getElementById("base");
+    if(favorites.includes(code)){
+        favorites =
+        favorites.filter(x => x !== code);
+    }
+    else{
+        favorites.push(code);
+    }
 
-Object.keys(currencyNames)
-.sort()
-.forEach(code=>{
-
-const option=document.createElement("option");
-
-option.value=code;
-option.textContent=code+" - "+currencyNames[code];
-
-if(code==="INR"){
-option.selected=true;
-}
-
-base.appendChild(option);
-
-});
-
-if(order.length===0){
-
-order=Object.keys(currencyNames);
-
-saveData();
-
-}
-}
-
-function toggleFav(code){
-
-if(favorites.includes(code)){
-favorites=favorites.filter(x=>x!==code);
-}
-else{
-favorites.push(code);
-}
-
-saveData();
-renderTable();
+    saveData();
+    renderTable();
 }
 
 function moveUp(code){
 
-const i=order.indexOf(code);
+    const idx = order.indexOf(code);
 
-if(i>0){
+    if(idx > 0){
 
-[order[i-1],order[i]]=
-[order[i],order[i-1]];
+        [order[idx-1], order[idx]] =
+        [order[idx], order[idx-1]];
 
-saveData();
-renderTable();
-
-}
+        saveData();
+        renderTable();
+    }
 }
 
 function moveDown(code){
 
-const i=order.indexOf(code);
+    const idx = order.indexOf(code);
 
-if(i<order.length-1){
+    if(idx < order.length - 1){
 
-[order[i+1],order[i]]=
-[order[i],order[i+1]];
+        [order[idx+1], order[idx]] =
+        [order[idx], order[idx+1]];
 
-saveData();
-renderTable();
-
+        saveData();
+        renderTable();
+    }
 }
-}
 
-async function convertAll(){
+async function loadRates(){
 
     try{
 
         document.getElementById("status").innerText =
-            "Loading rates...";
+        "Loading rates...";
 
         const base =
-            document.getElementById("base").value;
+        document.getElementById("base").value;
 
-        const response =
-            await fetch(
-                `https://api.frankfurter.app/latest?from=${base}`
-            );
-
-        if(!response.ok){
-            throw new Error(
-                "HTTP Error " + response.status
-            );
-        }
+        const response = await fetch(
+            `https://api.frankfurter.app/latest?from=${base}`
+        );
 
         const data = await response.json();
 
-        console.log(data);
-
         rates = data.rates;
-
         rates[base] = 1;
 
+        const savedOrder =
+        JSON.parse(
+            localStorage.getItem("currencyOrder") || "[]"
+        );
+
+        if(savedOrder.length){
+
+            order = savedOrder.filter(
+                x => rates[x] !== undefined
+            );
+
+            Object.keys(rates).forEach(code => {
+
+                if(!order.includes(code)){
+                    order.push(code);
+                }
+
+            });
+
+        } else {
+
+            order = Object.keys(rates).sort();
+
+        }
+
         document.getElementById("status").innerText =
-            `Rates loaded for ${base}`;
+        `Rates loaded for ${base}`;
 
         renderTable();
 
@@ -340,99 +292,119 @@ async function convertAll(){
         console.error(err);
 
         document.getElementById("status").innerText =
-            "Error: " + err.message;
+        "Error loading rates.";
     }
 }
 
 function renderTable(){
 
-const amount=
-parseFloat(document.getElementById("amount").value)||0;
+    const amount =
+    parseFloat(
+        document.getElementById("amount").value
+    ) || 0;
 
-const search=
-document.getElementById("search")
-.value
-.toUpperCase()
-.trim();
+    const search =
+    document.getElementById("search")
+    .value
+    .toUpperCase();
 
-let list=[...order];
+    let list = [...order];
 
-list.sort((a,b)=>{
+    list.sort((a,b)=>{
 
-const af=favorites.includes(a)?0:1;
-const bf=favorites.includes(b)?0:1;
+        const af =
+        favorites.includes(a) ? 0 : 1;
 
-if(af!==bf) return af-bf;
+        const bf =
+        favorites.includes(b) ? 0 : 1;
 
-return order.indexOf(a)-order.indexOf(b);
+        if(af !== bf){
+            return af - bf;
+        }
 
-});
+        return order.indexOf(a) -
+               order.indexOf(b);
+    });
 
-let html="";
+    let html = "";
 
-for(const code of list){
+    for(const code of list){
 
-if(search){
+        if(search &&
+           !code.includes(search)){
+            continue;
+        }
 
-const text=
-(code+" "+currencyNames[code])
-.toUpperCase();
+        const value =
+        amount * rates[code];
 
-if(!text.includes(search)){
-continue;
+        html += `
+        <tr class="${
+            favorites.includes(code)
+            ? 'favorite'
+            : ''
+        }">
+
+        <td>
+        <span class="star"
+        onclick="toggleFavorite('${code}')">
+        ${
+            favorites.includes(code)
+            ? '⭐'
+            : '☆'
+        }
+        </span>
+        </td>
+
+        <td>
+        <button class="move"
+        onclick="moveUp('${code}')">▲</button>
+
+        <button class="move"
+        onclick="moveDown('${code}')">▼</button>
+        </td>
+
+        <td>${code}</td>
+
+        <td>
+        ${value.toLocaleString(
+            undefined,
+            {
+                maximumFractionDigits:4
+            }
+        )}
+        </td>
+
+        </tr>
+        `;
+    }
+
+    document.getElementById("results").innerHTML =
+    html;
 }
-}
 
-const rate=rates[code];
+document
+.getElementById("amount")
+.addEventListener(
+    "input",
+    renderTable
+);
 
-if(rate===undefined) continue;
+document
+.getElementById("search")
+.addEventListener(
+    "input",
+    renderTable
+);
 
-const value=(amount*rate);
+document
+.getElementById("base")
+.addEventListener(
+    "change",
+    loadRates
+);
 
-html+=`
-<tr class="${favorites.includes(code)?'favorite-row':''}">
-<td>
-<span class="star"
-onclick="toggleFav('${code}')">
-${favorites.includes(code)?'⭐':'☆'}
-</span>
-</td>
-
-<td>
-<button class="move"
-onclick="moveUp('${code}')">▲</button>
-
-<button class="move"
-onclick="moveDown('${code}')">▼</button>
-</td>
-
-<td>${code}</td>
-
-<td>${currencyNames[code]}</td>
-
-<td class="value">
-${value.toLocaleString(undefined,{
-maximumFractionDigits:4
-})}
-</td>
-</tr>
-`;
-}
-
-document.getElementById("results").innerHTML=html;
-}
-
-document.getElementById("amount")
-.addEventListener("input",renderTable);
-
-document.getElementById("search")
-.addEventListener("input",renderTable);
-
-document.getElementById("base")
-.addEventListener("change",convertAll);
-
-setupCurrencies();
-convertAll();
+loadRates();
 
 </script>
 
