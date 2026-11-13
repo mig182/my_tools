@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian Government Securities Calculator</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #172033;
+}
+
+.container { max-width: 950px; margin: auto; }
+
+h1 { text-align: center; color: #2563eb; }
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 28px;
+}
+
+.input-box {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 14px 0 9px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    font-size: 17px;
+    border: 2px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+input:focus, select:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+input:disabled {
+    background: #f1f5f9;
+}
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.result {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px #0000000b;
+    min-width: 0;
+}
+
+.unit {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.value {
+    font-size: 19px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+button {
+    border: none;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover { background: #dbeafe; }
+
+.section-title { margin: 28px 0 14px; }
+
+.hint {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.error {
+    color: #dc2626;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+@media(max-width:600px) {
+    body { padding: 18px 12px; }
+    .input-box { padding: 17px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Indian G-Sec Calculator</h1>
+
+<div class="subtitle">
+Calculate Government Securities returns, discounts,
+T-Bill yields and annualised returns for custom days.
+</div>
+
+<div class="input-box">
+
+<label for="mode">Select Calculation Type</label>
+<select id="mode">
+    <option value="holding">Holding Period Return</option>
+    <option value="discount">Discount on Face Value</option>
+    <option value="maturity">T-Bill / Zero Coupon Maturity Return</option>
+</select>
+
+<label for="face">Face Value (₹)</label>
+<input type="number" id="face" value="100000"
+min="0" step="any">
+
+<label for="buy">Purchase Price / Investment Amount (₹)</label>
+<input type="number" id="buy" value="98000"
+min="0" step="any">
+
+<div id="saleGroup">
+
+<label for="sell">Selling Price (₹)</label>
+<input type="number" id="sell" value="99000"
+min="0" step="any">
+
+<label for="coupon">Coupon Income Received (₹)</label>
+<input type="number" id="coupon" value="0"
+min="0" step="any">
+
+</div>
+
+<label for="days">Holding Period (Days)</label>
+<input type="number" id="days" value="90"
+min="1" step="1">
+
+<div id="discountGroup">
+
+<label for="discountBasis">Discount Yield Calculation</label>
+<select id="discountBasis">
+    <option value="365">365 Days</option>
+    <option value="360">360 Days</option>
+</select>
+
+</div>
+
+<p class="hint">
+Calculations update automatically.
+All amounts are in Indian Rupees (₹).
+</p>
+
+<div id="error" class="error"></div>
+
+</div>
+
+<h3 class="section-title">Calculation Results</h3>
+
+<div class="results" id="results"></div>
+
+<h3 class="section-title">Calculation Formula</h3>
+
+<div class="input-box">
+
+<p><b>Holding Period Profit / Loss</b></p>
+<p>Sale Price + Coupon Income − Purchase Price</p>
+
+<p><b>Holding Period Return (%)</b></p>
+<p>(Profit / Purchase Price) × 100</p>
+
+<p><b>Annualised Return (%)</b></p>
+<p>[(1 + Holding Period Return) ^ (365 / Days) − 1] × 100</p>
+
+<p><b>Discount Amount</b></p>
+<p>Face Value − Purchase Price</p>
+
+<p><b>T-Bill Investment Yield (%)</b></p>
+<p>[(Face Value / Purchase Price) − 1] × (365 / Days) × 100</p>
+
+<p><b>T-Bill Bank Discount Yield (%)</b></p>
+<p>(Discount / Face Value) × (365 / Days) × 100</p>
+
+<p class="hint">
+Annualised investment yield uses compound annualisation.
+T-Bill investment yield and bank discount yield are
+different conventions.
+</p>
+
+</div>
+
+<div class="footer">
+Indian Government Securities Calculator | INR | Custom Days
+</div>
+
+</div>
+
+<script>
+
+const mode = document.getElementById("mode");
+
+const face = document.getElementById("face");
+const buy = document.getElementById("buy");
+const sell = document.getElementById("sell");
+const coupon = document.getElementById("coupon");
+const days = document.getElementById("days");
+
+const discountBasis = document.getElementById("discountBasis");
+
+const saleGroup = document.getElementById("saleGroup");
+const discountGroup = document.getElementById("discountGroup");
+
+const results = document.getElementById("results");
+const error = document.getElementById("error");
+
+const money = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2
+});
+
+function formatNumber(value) {
+    if (!Number.isFinite(value)) return "Out of range";
+
+    return Number(value.toFixed(6)).toLocaleString("en-IN", {
+        maximumFractionDigits: 6
+    });
+}
+
+function formatPercent(value) {
+    return formatNumber(value) + "%";
+}
+
+function addResult(title, value) {
+
+    const card = document.createElement("div");
+    card.className = "result";
+
+    const label = document.createElement("div");
+    label.className = "unit";
+    label.textContent = title;
+
+    const row = document.createElement("div");
+    row.className = "value-row";
+
+    const output = document.createElement("div");
+    output.className = "value";
+    output.textContent = value;
+
+    const copy = document.createElement("button");
+    copy.textContent = "Copy";
+    copy.type = "button";
+
+    copy.addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(String(value));
+            copy.textContent = "Copied!";
+            setTimeout(() => copy.textContent = "Copy", 1200);
+        } catch {
+            copy.textContent = "Unavailable";
+        }
+    });
+
+    row.appendChild(output);
+    row.appendChild(copy);
+
+    card.appendChild(label);
+    card.appendChild(row);
+
+    results.appendChild(card);
+}
+
+function calculate() {
+
+    results.innerHTML = "";
+    error.textContent = "";
+
+    const type = mode.value;
+
+    const fv = Number(face.value);
+    const investment = Number(buy.value);
+    const selling = Number(sell.value);
+    const couponIncome = Number(coupon.value);
+    const period = Number(days.value);
+
+    const basis = Number(discountBasis.value);
+
+    // Input validation
+
+    if (
+        face.value.trim() === "" ||
+        buy.value.trim() === "" ||
+        days.value.trim() === "" ||
+        !Number.isFinite(fv) ||
+        !Number.isFinite(investment) ||
+        !Number.isFinite(period) ||
+        fv <= 0 ||
+        investment <= 0 ||
+        period <= 0 ||
+        !Number.isInteger(period)
+    ) {
+        error.textContent =
+            "Enter valid positive face value, investment and whole number of days.";
+        return;
+    }
+
+    if (
+        type === "holding" &&
+        (
+            sell.value.trim() === "" ||
+            coupon.value.trim() === "" ||
+            !Number.isFinite(selling) ||
+            !Number.isFinite(couponIncome) ||
+            selling < 0 ||
+            couponIncome < 0
+        )
+    ) {
+        error.textContent = "Enter a valid selling price and coupon income.";
+        return;
+    }
+
+    if (
+        type !== "holding" &&
+        investment >= fv
+    ) {
+        error.textContent =
+            "Purchase price must be less than face value for a positive discount.";
+        return;
+    }
+
+    const discount = fv - investment;
+
+    const discountPercent = (discount / fv) * 100;
+
+    // Common annualisation factor
+
+    const annualFactor = 365 / period;
+
+    if (type === "holding") {
+
+        const totalIncome = selling + couponIncome - investment;
+
+        const holdingReturn =
+            (totalIncome / investment) * 100;
+
+        const annualised =
+            (Math.pow(
+                (selling + couponIncome) / investment,
+                annualFactor
+            ) - 1) * 100;
+
+        const totalReturn =
+            ((selling + couponIncome) / investment) * 100;
+
+        const absoluteReturn =
+            totalIncome;
+
+        const annualSimple =
+            holdingReturn * annualFactor;
+
+        addResult("Purchase Investment", money.format(investment));
+
+        addResult("Selling Value", money.format(selling));
+
+        addResult("Coupon Income", money.format(couponIncome));
+
+        addResult("Total Amount Received",
+            money.format(selling + couponIncome));
+
+        addResult("Profit / Loss", money.format(absoluteReturn));
+
+        addResult("Holding Period Return",
+            formatPercent(holdingReturn));
+
+        addResult("Annualised Compound Return",
+            formatPercent(annualised));
+
+        addResult("Annualised Simple Return",
+            formatPercent(annualSimple));
+
+        addResult("Holding Period", period + " Days");
+
+        addResult("Return on Face Value",
+            formatPercent((absoluteReturn / fv) * 100));
+
+    }
+
+    else if (type === "discount") {
+
+        const investmentYield =
+            (discount / investment) * annualFactor * 100;
+
+        const bankDiscountYield =
+            (discount / fv) * basis / period * 100;
+
+        const compoundYield =
+            (Math.pow(fv / investment, annualFactor) - 1) * 100;
+
+        addResult("Face Value", money.format(fv));
+
+        addResult("Purchase Price", money.format(investment));
+
+        addResult("Discount Amount", money.format(discount));
+
+        addResult("Discount on Face Value",
+            formatPercent(discountPercent));
+
+        addResult("Holding Period", period + " Days");
+
+        addResult("Annualised Investment Yield",
+            formatPercent(investmentYield));
+
+        addResult("Annualised Compound Yield",
+            formatPercent(compoundYield));
+
+        addResult("Bank Discount Yield (" + basis + " Days)",
+            formatPercent(bankDiscountYield));
+
+    }
+
+    else if (type === "maturity") {
+
+        const profit = fv - investment;
+
+        const holdingReturn =
+            (profit / investment) * 100;
+
+        const annualised =
+            (Math.pow(fv / investment, annualFactor) - 1) * 100;
+
+        const simpleYield =
+            holdingReturn * annualFactor;
+
+        const bankYield =
+            (profit / fv) * basis / period * 100;
+
+        addResult("Initial Investment", money.format(investment));
+
+        addResult("Maturity Face Value", money.format(fv));
+
+        addResult("Maturity Profit", money.format(profit));
+
+        addResult("Total Maturity Proceeds", money.format(fv));
+
+        addResult("Holding Period", period + " Days");
+
+        addResult("Holding Period Return",
+            formatPercent(holdingReturn));
+
+        addResult("Annualised Compound Return",
+            formatPercent(annualised));
+
+        addResult("Annualised Simple Return",
+            formatPercent(simpleYield));
+
+        addResult("Bank Discount Yield",
+            formatPercent(bankYield));
+
+        addResult("Discount on Face Value",
+            formatPercent(discountPercent));
+
+    }
+
+}
+
+function updateMode() {
+
+    const type = mode.value;
+
+    saleGroup.style.display =
+        type === "holding" ? "block" : "none";
+
+    discountGroup.style.display =
+        type === "holding" ? "none" : "block";
+
+    calculate();
+}
+
+// Automatic calculation
+
+[
+    mode,
+    face,
+    buy,
+    sell,
+    coupon,
+    days,
+    discountBasis
+].forEach(element => {
+
+    element.addEventListener("input", calculate);
+    element.addEventListener("change", calculate);
+
+});
+
+mode.addEventListener("change", updateMode);
+
+updateMode();
+
+</script>
+
+</body>
+</html>
