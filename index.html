@@ -1,250 +1,122 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Length Converter</title>
-<style>
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    padding: 30px 16px;
-    font-family: Arial, sans-serif;
-    background: #f1f5f9;
-    color: #172033;
+.container {
+max-width: 900px;
+margin: auto;
 }
 
-.container { max-width: 900px; margin: auto; }
-
-h1 { text-align: center; color: #2563eb; }
+h1 {
+color: #172033;
+text-align: center;
+margin-bottom: 10px;
+}
 
 .subtitle {
-    text-align: center;
-    color: #64748b;
-    margin-bottom: 28px;
+text-align: center;
+color: #555;
+margin-bottom: 30px;
 }
 
-.input-box {
-    background: white;
-    padding: 24px;
-    border-radius: 14px;
-    margin-bottom: 22px;
-    box-shadow: 0 3px 12px #0000000c;
+.tools {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+gap: 20px;
 }
 
-label {
-    display: block;
-    font-weight: bold;
-    margin: 14px 0 9px;
+.card {
+background: white;
+border: 1px solid #dce2ea;
+border-radius: 12px;
+padding: 20px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-input, select {
-    width: 100%;
-    padding: 14px;
-    font-size: 18px;
-    border: 2px solid #cbd5e1;
-    border-radius: 9px;
-    background: white;
+.card h3 {
+margin-top: 0;
+color: #172033;
 }
 
-input:focus, select:focus { border-color: #2563eb; outline: none; }
-
-.results {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
+.card p {
+color: #666;
+min-height: 40px;
 }
 
-.result {
-    background: white;
-    padding: 18px;
-    border-radius: 12px;
-    border-left: 4px solid #3b82f6;
-    box-shadow: 0 2px 8px #0000000b;
-    min-width: 0;
+.btn {
+display: inline-block;
+text-decoration: none;
+background: #2563eb;
+color: white;
+padding: 10px 16px;
+border-radius: 8px;
+font-weight: 600;
 }
 
-.unit {
-    color: #64748b;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.value-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.value {
-    font-size: 19px;
-    font-weight: bold;
-    overflow-wrap: anywhere;
-}
-
-button {
-    border: none;
-    background: #eff6ff;
-    color: #2563eb;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover { background: #dbeafe; }
-
-.section-title { margin: 28px 0 14px; }
-
-.footer {
-    text-align: center;
-    margin-top: 30px;
-    color: #94a3b8;
-    font-size: 12px;
+.btn:hover {
+background: #1d4ed8;
 }
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
-<h1>Length Converter</h1>
-<div class="subtitle">
-Select any base unit and convert it into all other units.
-</div>
-
-<div class="input-box">
-
-<label for="baseUnit">Select Base Unit</label>
-<select id="baseUnit"></select>
-
-<label for="inputValue">Enter Value</label>
-<input type="number" id="inputValue" value="1" step="any"
-placeholder="Enter value">
-
-<p style="color:#64748b;font-size:13px">
-Conversions update automatically.
+<h1>My Tools</h1>
+<p class="subtitle">
+Collection of useful calculators and utilities
 </p>
 
+<div class="tools">
+
+<div class="card">
+<h3>Price Comparator</h3>
+<p>Compare equivalent prices across multiple shops.</p>
+<a class="btn" href="price-comparator/">Open Tool</a>
 </div>
 
-<h3 class="section-title">Conversion Results</h3>
-<div class="results" id="results"></div>
-
-<div class="footer">
-Length Converter | Metric and Imperial Units
+<div class="card">
+<h3>Stock Target (Single)</h3>
+<p>Analyze stock target scenarios for a single stock.</p>
+<a class="btn" href="stock-target-single-clear/">Open Tool</a>
 </div>
 
+<div class="card">
+<h3>Stock Target (Individual)</h3>
+<p>Calculate individual stock target values.</p>
+<a class="btn" href="stock-target-indv-clear/">Open Tool</a>
 </div>
 
-<script>
+<div class="card">
+            <h3>Test Tool</h3>
+            <h3>Currency Converter</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="curr-conv/">Open Tool</a>
+        </div>
 
-// All factors are expressed in metres.
-const units = [
-{name:"Kilometre",symbol:"km",factor:1000},
-{name:"Hectometre",symbol:"hm",factor:100},
-{name:"Decametre",symbol:"dam",factor:10},
-{name:"Metre",symbol:"m",factor:1},
-{name:"Decimetre",symbol:"dm",factor:0.1},
-{name:"Centimetre",symbol:"cm",factor:0.01},
-{name:"Millimetre",symbol:"mm",factor:0.001},
-{name:"Micrometre",symbol:"µm",factor:1e-6},
-{name:"Nanometre",symbol:"nm",factor:1e-9},
-{name:"Mile",symbol:"mi",factor:1609.344},
-{name:"Yard",symbol:"yd",factor:0.9144},
-{name:"Foot",symbol:"ft",factor:0.3048},
-{name:"Inch",symbol:"in",factor:0.0254},
-{name:"Nautical Mile",symbol:"nmi",factor:1852},
-{name:"Fathom",symbol:"ftm",factor:1.8288},
-{name:"Thou (Mil)",symbol:"mil",factor:0.0000254}
-];
+        <div class="card">
+            <h3>Length Converter</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="length-conv/">Open Tool</a>
+        </div>
 
-const baseSelect = document.getElementById("baseUnit");
-const input = document.getElementById("inputValue");
-const results = document.getElementById("results");
+        <div class="card">
+            <h3>Volume Convertor</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="vol-conv/">Open Tool</a>
+        </div>
 
-// Populate base unit dropdown
-units.forEach((unit, index) => {
-    const option = document.createElement("option");
-    option.value = index;
-    option.textContent = unit.name + " (" + unit.symbol + ")";
-    if (unit.symbol === "m") option.selected = true;
-    baseSelect.appendChild(option);
-});
+        <div class="card">
+            <h3>Area Convertor</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="test/">Open Tool</a>
+        </div>
 
-function formatNumber(number) {
-    if (!Number.isFinite(number)) return "Out of range";
-    return Number(number.toPrecision(12)).toLocaleString(
-        "en-US",
-        {maximumSignificantDigits:12}
-    );
-}
+        <div class="card">
+            <h3>Test Tool - 02</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="area-conv/">Open Tool</a>
+        </div>
 
-function convert() {
-    results.innerHTML = "";
-
-    const value = Number(input.value);
-    const base = units[Number(baseSelect.value)];
-
-    if (input.value.trim() === "" || !Number.isFinite(value)) {
-        results.textContent = "Please enter a valid number.";
-        return;
-    }
-
-    // Convert input into metres first.
-    const metres = value * base.factor;
-
-    units.forEach(unit => {
-
-        // Do not display the selected base unit.
-        if (unit.symbol === base.symbol) return;
-
-        const converted = metres / unit.factor;
-
-        const card = document.createElement("div");
-        card.className = "result";
-
-        const label = document.createElement("div");
-        label.className = "unit";
-        label.textContent = unit.name + " (" + unit.symbol + ")";
-
-        const row = document.createElement("div");
-        row.className = "value-row";
-
-        const output = document.createElement("div");
-        output.className = "value";
-        output.textContent = formatNumber(converted);
-
-        const copy = document.createElement("button");
-        copy.textContent = "Copy";
-        copy.type = "button";
-
-        copy.addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(String(converted));
-                copy.textContent = "Copied!";
-                setTimeout(() => copy.textContent = "Copy", 1200);
-            } catch {
-                copy.textContent = "Unavailable";
-            }
-        });
-
-        row.appendChild(output);
-        row.appendChild(copy);
-        card.appendChild(label);
-        card.appendChild(row);
-
-        results.appendChild(card);
-    });
-}
-
-input.addEventListener("input", convert);
-baseSelect.addEventListener("change", convert);
-
-convert();
-
-</script>
-</body>
-</html>
+        <div class="card">
+            <h3>Test Tool - 03</h3>
+<p>Testing and experimental utilities.</p>
+<a class="btn" href="test/">Open Tool</a>
+</div>
