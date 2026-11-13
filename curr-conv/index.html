@@ -530,6 +530,19 @@ async function loadRates() {
 
 }
 
+// =================================
+// GET FULL CURRENCY NAME
+// =================================
+
+function getCurrencyName(code) {
+
+    const names = new Intl.DisplayNames(
+        ['en'],
+        { type: 'currency' }
+    );
+
+    return names.of(code) || code;
+}
 
 // =================================
 // RENDER CURRENCY TABLE
@@ -640,7 +653,9 @@ function renderTable() {
         </td>
 
 
-        <td>${code}</td>
+        <td>
+        <strong>${code} - ${getCurrencyName(code)}</strong>
+        </td>
 
 
         <td>
