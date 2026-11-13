@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weight Converter</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #172033;
+}
+
+.container { max-width: 900px; margin: auto; }
+
+h1 { text-align: center; color: #2563eb; }
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 28px;
+}
+
+.input-box {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 14px 0 9px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+input:focus, select:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.result {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px #0000000b;
+    min-width: 0;
+}
+
+.unit {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.value {
+    font-size: 19px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+button {
+    border: none;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover { background: #dbeafe; }
+
+.section-title { margin: 28px 0 14px; }
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Weight Converter</h1>
+
+<div class="subtitle">
+Select any base unit and convert it into all other weight units.
+</div>
+
+<div class="input-box">
+
+<label for="baseUnit">Select Base Unit</label>
+<select id="baseUnit"></select>
+
+<label for="inputValue">Enter Value</label>
+<input type="number" id="inputValue"
+value="1" step="any" placeholder="Enter weight">
+
+<p style="color:#64748b;font-size:13px">
+Conversions update automatically.
+</p>
+
+</div>
+
+<h3 class="section-title">Conversion Results</h3>
+
+<div class="results" id="results"></div>
+
+<div class="footer">
+Weight Converter | Metric and Imperial Units
+</div>
+
+</div>
+
+<script>
+
+// All conversion factors are expressed in kilograms.
+const units = [
+{name:"Metric Tonne",symbol:"t",factor:1000},
+{name:"Kilogram",symbol:"kg",factor:1},
+{name:"Hectogram",symbol:"hg",factor:0.1},
+{name:"Dekagram",symbol:"dag",factor:0.01},
+{name:"Gram",symbol:"g",factor:0.001},
+{name:"Decigram",symbol:"dg",factor:0.0001},
+{name:"Centigram",symbol:"cg",factor:0.00001},
+{name:"Milligram",symbol:"mg",factor:0.000001},
+{name:"Microgram",symbol:"µg",factor:1e-9},
+{name:"Nanogram",symbol:"ng",factor:1e-12},
+
+{name:"Quintal (Metric)",symbol:"q",factor:100},
+{name:"Carat",symbol:"ct",factor:0.0002},
+{name:"Troy Ounce",symbol:"ozt",factor:0.0311034768},
+{name:"Troy Pound",symbol:"lb t",factor:0.3732417216},
+
+{name:"Pound",symbol:"lb",factor:0.45359237},
+{name:"Ounce",symbol:"oz",factor:0.028349523125},
+{name:"Stone",symbol:"st",factor:6.35029318},
+{name:"US Short Ton",symbol:"US ton",factor:907.18474},
+{name:"UK Long Ton",symbol:"UK ton",factor:1016.0469088},
+{name:"Grain",symbol:"gr",factor:0.00006479891},
+{name:"Dram",symbol:"dr",factor:0.0017718451953125},
+
+{name:"Atomic Mass Unit",symbol:"u",factor:1.66053906660e-27}
+];
+
+const baseSelect = document.getElementById("baseUnit");
+const input = document.getElementById("inputValue");
+const results = document.getElementById("results");
+
+// Populate dropdown
+units.forEach((unit,index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = unit.name + " (" + unit.symbol + ")";
+
+    if(unit.symbol === "kg") option.selected = true;
+
+    baseSelect.appendChild(option);
+});
+
+function formatNumber(number) {
+    if(!Number.isFinite(number)) return "Out of range";
+
+    return Number(number.toPrecision(12)).toLocaleString(
+        "en-US",
+        {maximumSignificantDigits:12}
+    );
+}
+
+function convert() {
+    results.innerHTML = "";
+
+    const value = Number(input.value);
+    const base = units[Number(baseSelect.value)];
+
+    if(input.value.trim() === "" || !Number.isFinite(value)) {
+        results.textContent = "Please enter a valid number.";
+        return;
+    }
+
+    // Convert input into kilograms.
+    const kilograms = value * base.factor;
+
+    units.forEach(unit => {
+
+        // Skip selected base unit.
+        if(unit.symbol === base.symbol) return;
+
+        // Convert kilograms into target unit.
+        const converted = kilograms / unit.factor;
+
+        const card = document.createElement("div");
+        card.className = "result";
+
+        const label = document.createElement("div");
+        label.className = "unit";
+        label.textContent = unit.name + " (" + unit.symbol + ")";
+
+        const row = document.createElement("div");
+        row.className = "value-row";
+
+        const output = document.createElement("div");
+        output.className = "value";
+        output.textContent = formatNumber(converted);
+
+        const copy = document.createElement("button");
+        copy.textContent = "Copy";
+        copy.type = "button";
+
+        copy.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(String(converted));
+                copy.textContent = "Copied!";
+                setTimeout(() => copy.textContent = "Copy", 1200);
+            } catch {
+                copy.textContent = "Unavailable";
+            }
+        });
+
+        row.appendChild(output);
+        row.appendChild(copy);
+
+        card.appendChild(label);
+        card.appendChild(row);
+
+        results.appendChild(card);
+    });
+}
+
+input.addEventListener("input", convert);
+baseSelect.addEventListener("change", convert);
+
+convert();
+
+</script>
+</body>
+</html>
