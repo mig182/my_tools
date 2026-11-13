@@ -237,42 +237,56 @@ function moveDown(code){
     }
 }
 
-async function loadRates(){
 
-    try{
+async function loadRates() {
 
-        document.getElementById("status").innerText =
-        "Loading rates...";
+    const status = document.getElementById("status");
+    const base = document.getElementById("base").value;
 
-        const base =
-        document.getElementById("base").value;
+    try {
+
+        status.innerText = "Loading rates...";
 
         const response = await fetch(
-            `https://api.frankfurter.app/latest?from=${base}`
+            `https://api.frankfurter.dev/v2/rates?base=${encodeURIComponent(base)}`
         );
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        rates = data.rates;
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid API response");
+        }
+
+        // Convert the v2 response into the format
+        // used by the existing converter.
+        rates = {};
+
+        data.forEach(item => {
+            rates[item.quote] = item.rate;
+        });
+
+        // Base currency always has a value of 1.
         rates[base] = 1;
 
-        const savedOrder =
-        JSON.parse(
+        // Restore saved currency order.
+        const savedOrder = JSON.parse(
             localStorage.getItem("currencyOrder") || "[]"
         );
 
-        if(savedOrder.length){
+        if (savedOrder.length) {
 
             order = savedOrder.filter(
-                x => rates[x] !== undefined
+                code => rates[code] !== undefined
             );
 
             Object.keys(rates).forEach(code => {
-
-                if(!order.includes(code)){
+                if (!order.includes(code)) {
                     order.push(code);
                 }
-
             });
 
         } else {
@@ -281,20 +295,20 @@ async function loadRates(){
 
         }
 
-        document.getElementById("status").innerText =
-        `Rates loaded for ${base}`;
+        status.innerText =
+            `Rates loaded successfully for ${base}`;
 
         renderTable();
 
-    }
-    catch(err){
+    } catch (err) {
 
-        console.error(err);
+        console.error("Currency API error:", err);
 
-        document.getElementById("status").innerText =
-        "Error loading rates.";
+        status.innerText =
+            "Error loading rates: " + err.message;
     }
 }
+
 
 function renderTable(){
 
