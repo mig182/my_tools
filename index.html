@@ -1,22 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Tools</title>
-</head>
-<body>
-    <h1>My Tools</h1>
 
-    <ul>
-        <li><a href="price-comparator/">Price Comparator</a></li>
-    </ul>
-  <ul>
-        <li><a href="stock-target-single-clear/">Price Comparator</a></li>
-    </ul>
-  <ul>
-        <li><a href="stock-target-indv-clear/">Price Comparator</a></li>
-    </ul>
-  <ul>
-        <li><a href="test/">Price Comparator</a></li>
-    </ul>
+    <style>
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #172033;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .tools {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #dce2ea;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #172033;
+        }
+
+        .card p {
+            color: #666;
+            min-height: 40px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>My Tools</h1>
+    <p class="subtitle">
+        Collection of useful calculators and utilities
+    </p>
+
+    <div class="tools">
+
+        <div class="card">
+            <h3>Price Comparator</h3>
+            <p>Compare equivalent prices across multiple shops.</p>
+            <a class="btn" href="price-comparator/">Open Tool</a>
+        </div>
+
+        <div class="card">
+            <h3>Stock Target (Single)</h3>
+            <p>Analyze stock target scenarios for a single stock.</p>
+            <a class="btn" href="stock-target-single-clear/">Open Tool</a>
+        </div>
+
+        <div class="card">
+            <h3>Stock Target (Individual)</h3>
+            <p>Calculate individual stock target values.</p>
+            <a class="btn" href="stock-target-indv-clear/">Open Tool</a>
+        </div>
+
+        <div class="card">
+            <h3>Test Tool</h3>
+            <p>Testing and experimental utilities.</p>
+            <a class="btn" href="test/">Open Tool</a>
+        </div>
+
+    </div>
+
+</div>
+
 </body>
 </html>
