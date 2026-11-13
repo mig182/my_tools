@@ -302,39 +302,46 @@ renderTable();
 
 async function convertAll(){
 
-try{
+    try{
 
-document.getElementById("status")
-.innerText="Loading rates...";
+        document.getElementById("status").innerText =
+            "Loading rates...";
 
-const base=document.getElementById("base").value;
+        const base =
+            document.getElementById("base").value;
 
-const url=
-`https://api.frankfurter.app/latest?from=${base}`;
+        const response =
+            await fetch(
+                `https://api.frankfurter.app/latest?from=${base}`
+            );
 
-const response=await fetch(url);
+        if(!response.ok){
+            throw new Error(
+                "HTTP Error " + response.status
+            );
+        }
 
-const data=await response.json();
+        const data = await response.json();
 
-rates=data.rates;
+        console.log(data);
 
-rates[base]=1;
+        rates = data.rates;
 
-document.getElementById("status")
-.innerText=
-`Rates loaded for ${base}`;
+        rates[base] = 1;
 
-renderTable();
+        document.getElementById("status").innerText =
+            `Rates loaded for ${base}`;
 
-}
-catch(err){
+        renderTable();
 
-document.getElementById("status")
-.innerText=
-"Unable to load rates.";
+    }
+    catch(err){
 
-console.error(err);
-}
+        console.error(err);
+
+        document.getElementById("status").innerText =
+            "Error: " + err.message;
+    }
 }
 
 function renderTable(){
