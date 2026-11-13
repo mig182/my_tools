@@ -1,109 +1,162 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>All Currency Converter</title>
 
 <style>
-body{
-    font-family:Segoe UI,Arial,sans-serif;
-    background:#f5f7fa;
-    margin:0;
-    padding:20px;
-    color:#172033;
+
+* {
+    box-sizing: border-box;
 }
 
-.container{
-    max-width:1200px;
-    margin:auto;
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    color: #172033;
 }
 
-.card{
-    background:white;
-    border:1px solid #dce2ea;
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
+.container {
+    max-width: 1200px;
+    margin: auto;
 }
 
-h1{
-    text-align:center;
+.card {
+    background: white;
+    border: 1px solid #dce2ea;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
-.controls{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:15px;
-    margin-bottom:20px;
+h1 {
+    text-align: center;
+    margin-top: 0;
 }
 
-input, select{
-    width:100%;
-    padding:10px;
-    border:1px solid #cbd5e1;
-    border-radius:8px;
-    box-sizing:border-box;
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-button{
-    cursor:pointer;
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
 }
 
-.action-btn{
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    font-weight:bold;
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
+button {
+    cursor: pointer;
 }
 
-th{
-    background:#172033;
-    color:white;
+.action-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-weight: bold;
 }
 
-th, td{
-    border:1px solid #dce2ea;
-    padding:8px;
+.action-btn:hover {
+    background: #1d4ed8;
 }
 
-td:last-child{
-    text-align:right;
+.status {
+    color: #555;
+    margin-top: 12px;
+    overflow-wrap: anywhere;
 }
 
-.favorite{
-    background:#fff8dc;
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
 }
 
-.star{
-    cursor:pointer;
-    font-size:18px;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 450px;
 }
 
-.move{
-    background:none;
-    border:none;
-    cursor:pointer;
+th {
+    background: #172033;
+    color: white;
 }
 
-.status{
-    color:#555;
-    margin-top:10px;
+th, td {
+    border: 1px solid #dce2ea;
+    padding: 10px;
 }
 
-@media(max-width:800px){
-    .controls{
-        grid-template-columns:1fr;
+td:last-child {
+    text-align: right;
+}
+
+.favorite {
+    background: #fff8dc;
+}
+
+.star {
+    cursor: pointer;
+    font-size: 19px;
+}
+
+.move {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+}
+
+.move:hover {
+    color: #2563eb;
+}
+
+.footer {
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 20px;
+}
+
+@media(max-width: 800px) {
+
+    .controls {
+        grid-template-columns: 1fr;
     }
+
+    body {
+        padding: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
 }
+
 </style>
+
 </head>
 
 <body>
@@ -117,13 +170,25 @@ td:last-child{
 <div class="controls">
 
 <div>
+
 <label>Amount</label>
-<input id="amount" type="number" value="1" step="0.01">
+
+<input
+    id="amount"
+    type="number"
+    value="1"
+    step="any"
+    min="0"
+>
+
 </div>
 
 <div>
+
 <label>Base Currency</label>
+
 <select id="base">
+
 <option value="USD">USD</option>
 <option value="INR" selected>INR</option>
 <option value="EUR">EUR</option>
@@ -134,18 +199,30 @@ td:last-child{
 <option value="CHF">CHF</option>
 <option value="SGD">SGD</option>
 <option value="AED">AED</option>
+
 </select>
+
 </div>
 
 <div>
-<label>Search</label>
-<input id="search" placeholder="USD, INR, EUR...">
-</div>
+
+<label>Search Currency</label>
+
+<input
+    id="search"
+    type="text"
+    placeholder="Search USD, EUR, INR..."
+>
 
 </div>
 
-<button class="action-btn" onclick="loadRates()">
-Refresh Rates
+</div>
+
+<button
+    class="action-btn"
+    onclick="loadRates()"
+>
+    🔄 Refresh Rates
 </button>
 
 <p id="status" class="status">
@@ -154,20 +231,26 @@ Loading rates...
 
 </div>
 
+
 <div class="card">
+
+<div class="table-wrapper">
 
 <table>
 
 <thead>
+
 <tr>
 <th>Fav</th>
 <th>Move</th>
 <th>Currency</th>
 <th>Value</th>
 </tr>
+
 </thead>
 
 <tbody id="results">
+
 </tbody>
 
 </table>
@@ -176,14 +259,54 @@ Loading rates...
 
 </div>
 
+
+<div class="footer">
+
+Exchange rates provided by
+<a
+    href="https://www.exchangerate-api.com"
+    target="_blank"
+    rel="noopener noreferrer"
+>
+    ExchangeRate-API
+</a>
+
+</div>
+
+</div>
+
+
 <script>
+
+// =================================
+// GLOBAL VARIABLES
+// =================================
 
 let rates = {};
 let order = [];
-let favorites =
-JSON.parse(localStorage.getItem("favorites") || "[]");
 
-function saveData(){
+let favorites = [];
+
+try {
+    favorites = JSON.parse(
+        localStorage.getItem("favorites") || "[]"
+    );
+
+    if (!Array.isArray(favorites)) {
+        favorites = [];
+    }
+
+} catch (err) {
+    favorites = [];
+}
+
+
+// =================================
+// SAVE DATA
+// =================================
+
+function saveData() {
+
     localStorage.setItem(
         "favorites",
         JSON.stringify(favorites)
@@ -193,89 +316,167 @@ function saveData(){
         "currencyOrder",
         JSON.stringify(order)
     );
+
 }
 
-function toggleFavorite(code){
 
-    if(favorites.includes(code)){
-        favorites =
-        favorites.filter(x => x !== code);
-    }
-    else{
+// =================================
+// TOGGLE FAVORITE
+// =================================
+
+function toggleFavorite(code) {
+
+    if (favorites.includes(code)) {
+
+        favorites = favorites.filter(
+            x => x !== code
+        );
+
+    } else {
+
         favorites.push(code);
+
     }
 
     saveData();
+
     renderTable();
+
 }
 
-function moveUp(code){
+
+// =================================
+// MOVE CURRENCY UP
+// =================================
+
+function moveUp(code) {
 
     const idx = order.indexOf(code);
 
-    if(idx > 0){
+    if (idx > 0) {
 
-        [order[idx-1], order[idx]] =
-        [order[idx], order[idx-1]];
+        [
+            order[idx - 1],
+            order[idx]
+        ] = [
+            order[idx],
+            order[idx - 1]
+        ];
 
         saveData();
+
         renderTable();
+
     }
+
 }
 
-function moveDown(code){
+
+// =================================
+// MOVE CURRENCY DOWN
+// =================================
+
+function moveDown(code) {
 
     const idx = order.indexOf(code);
 
-    if(idx < order.length - 1){
+    if (idx >= 0 && idx < order.length - 1) {
 
-        [order[idx+1], order[idx]] =
-        [order[idx], order[idx+1]];
+        [
+            order[idx + 1],
+            order[idx]
+        ] = [
+            order[idx],
+            order[idx + 1]
+        ];
 
         saveData();
+
         renderTable();
+
     }
+
 }
 
+
+// =================================
+// LOAD EXCHANGE RATES
+// =================================
 
 async function loadRates() {
 
-    const status = document.getElementById("status");
-    const base = document.getElementById("base").value;
+    const status =
+        document.getElementById("status");
+
+    const base =
+        document.getElementById("base").value;
 
     try {
 
-        status.innerText = "Loading rates...";
+        status.innerText =
+            "Loading exchange rates...";
 
-        const response = await fetch(
-            `https://api.frankfurter.dev/v2/rates?base=${encodeURIComponent(base)}`
-        );
+        const url =
+            `https://open.er-api.com/v6/latest/${encodeURIComponent(base)}`;
+
+        console.log("Fetching:", url);
+
+        const response = await fetch(url);
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+
+            throw new Error(
+                "HTTP Error: " + response.status
+            );
+
         }
 
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid API response");
+        console.log("API Response:", data);
+
+        if (
+            data.result !== "success" ||
+            !data.rates ||
+            typeof data.rates !== "object"
+        ) {
+
+            throw new Error(
+                data["error-type"] ||
+                "Invalid exchange rate response"
+            );
+
         }
 
-        // Convert the v2 response into the format
-        // used by the existing converter.
-        rates = {};
+        // Store rates
 
-        data.forEach(item => {
-            rates[item.quote] = item.rate;
-        });
+        rates = data.rates;
 
-        // Base currency always has a value of 1.
+        // Base currency is always 1
+
         rates[base] = 1;
 
-        // Restore saved currency order.
-        const savedOrder = JSON.parse(
-            localStorage.getItem("currencyOrder") || "[]"
-        );
+
+        // Restore saved currency order
+
+        let savedOrder = [];
+
+        try {
+
+            savedOrder = JSON.parse(
+                localStorage.getItem("currencyOrder") || "[]"
+            );
+
+            if (!Array.isArray(savedOrder)) {
+                savedOrder = [];
+            }
+
+        } catch (err) {
+
+            savedOrder = [];
+
+        }
+
 
         if (savedOrder.length) {
 
@@ -284,9 +485,13 @@ async function loadRates() {
             );
 
             Object.keys(rates).forEach(code => {
+
                 if (!order.includes(code)) {
+
                     order.push(code);
+
                 }
+
             });
 
         } else {
@@ -295,132 +500,209 @@ async function loadRates() {
 
         }
 
+
+        saveData();
+
+
+        // Display update date
+
+        const updateDate =
+            data.time_last_update_utc || "Unknown";
+
         status.innerText =
-            `Rates loaded successfully for ${base}`;
+            `Successfully loaded ${Object.keys(rates).length} currencies | Base: ${base} | Updated: ${updateDate}`;
 
         renderTable();
 
-    } catch (err) {
+    }
 
-        console.error("Currency API error:", err);
+    catch (err) {
+
+        console.error(
+            "Currency loading error:",
+            err
+        );
 
         status.innerText =
             "Error loading rates: " + err.message;
+
     }
+
 }
 
 
-function renderTable(){
+// =================================
+// RENDER CURRENCY TABLE
+// =================================
+
+function renderTable() {
+
+    if (!Object.keys(rates).length) {
+        return;
+    }
 
     const amount =
-    parseFloat(
-        document.getElementById("amount").value
-    ) || 0;
+        parseFloat(
+            document.getElementById("amount").value
+        ) || 0;
 
     const search =
-    document.getElementById("search")
-    .value
-    .toUpperCase();
+        document.getElementById("search")
+        .value
+        .trim()
+        .toUpperCase();
+
 
     let list = [...order];
 
-    list.sort((a,b)=>{
+
+    // Favorites first
+
+    list.sort((a, b) => {
 
         const af =
-        favorites.includes(a) ? 0 : 1;
+            favorites.includes(a) ? 0 : 1;
 
         const bf =
-        favorites.includes(b) ? 0 : 1;
+            favorites.includes(b) ? 0 : 1;
 
-        if(af !== bf){
+        if (af !== bf) {
             return af - bf;
         }
 
         return order.indexOf(a) -
                order.indexOf(b);
+
     });
+
 
     let html = "";
 
-    for(const code of list){
 
-        if(search &&
-           !code.includes(search)){
+    for (const code of list) {
+
+        if (
+            search &&
+            !code.toUpperCase().includes(search)
+        ) {
+            continue;
+        }
+
+        if (rates[code] === undefined) {
             continue;
         }
 
         const value =
-        amount * rates[code];
+            amount * rates[code];
+
 
         html += `
+
         <tr class="${
             favorites.includes(code)
-            ? 'favorite'
-            : ''
+            ? "favorite"
+            : ""
         }">
 
         <td>
-        <span class="star"
-        onclick="toggleFavorite('${code}')">
-        ${
-            favorites.includes(code)
-            ? '⭐'
-            : '☆'
-        }
-        </span>
+
+            <span
+                class="star"
+                onclick="toggleFavorite('${code}')"
+                title="Toggle favorite"
+            >
+
+            ${
+                favorites.includes(code)
+                ? "⭐"
+                : "☆"
+            }
+
+            </span>
+
         </td>
+
 
         <td>
-        <button class="move"
-        onclick="moveUp('${code}')">▲</button>
 
-        <button class="move"
-        onclick="moveDown('${code}')">▼</button>
+            <button
+                class="move"
+                onclick="moveUp('${code}')"
+                title="Move up"
+            >▲</button>
+
+            <button
+                class="move"
+                onclick="moveDown('${code}')"
+                title="Move down"
+            >▼</button>
+
         </td>
+
 
         <td>${code}</td>
 
+
         <td>
-        ${value.toLocaleString(
-            undefined,
-            {
-                maximumFractionDigits:4
-            }
-        )}
+
+            ${value.toLocaleString(
+                undefined,
+                {
+                    maximumFractionDigits: 4
+                }
+            )}
+
         </td>
 
         </tr>
+
         `;
+
     }
 
-    document.getElementById("results").innerHTML =
-    html;
+
+    document.getElementById("results")
+        .innerHTML = html;
+
 }
 
-document
-.getElementById("amount")
-.addEventListener(
-    "input",
-    renderTable
-);
+
+// =================================
+// EVENT LISTENERS
+// =================================
 
 document
-.getElementById("search")
-.addEventListener(
-    "input",
-    renderTable
-);
+    .getElementById("amount")
+    .addEventListener(
+        "input",
+        renderTable
+    );
+
 
 document
-.getElementById("base")
-.addEventListener(
-    "change",
-    loadRates
-);
+    .getElementById("search")
+    .addEventListener(
+        "input",
+        renderTable
+    );
+
+
+document
+    .getElementById("base")
+    .addEventListener(
+        "change",
+        loadRates
+    );
+
+
+// =================================
+// START APPLICATION
+// =================================
 
 loadRates();
 
 </script>
 
 </body>
+
 </html>
