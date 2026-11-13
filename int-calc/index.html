@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interest Calculator</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #172033;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    color: #2563eb;
+}
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 28px;
+}
+
+.input-box {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 16px 0 9px;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px;
+    font-size: 17px;
+    border: 2px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+input:focus, select:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+.duration {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.result-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.result {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px #0000000b;
+}
+
+.result-title {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.result-value {
+    font-size: 23px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.highlight {
+    border-left-color: #16a34a;
+}
+
+.highlight .result-value {
+    color: #16a34a;
+}
+
+.details {
+    background: white;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    line-height: 1.8;
+}
+
+button {
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover { background: #1d4ed8; }
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+@media(max-width:500px) {
+    .duration { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Interest Calculator</h1>
+
+<div class="subtitle">
+Calculate simple and compound interest for any duration.
+</div>
+
+<div class="input-box">
+
+<label for="principal">Principal Amount</label>
+<input type="number" id="principal" value="100000"
+min="0" step="any">
+
+<label for="rate">Annual Interest Rate (%)</label>
+<input type="number" id="rate" value="10"
+min="0" step="any">
+
+<label>Investment / Loan Duration</label>
+
+<div class="duration">
+    <div>
+        <label for="years">Years</label>
+        <input type="number" id="years" value="1" min="0" step="any">
+    </div>
+
+    <div>
+        <label for="months">Months</label>
+        <input type="number" id="months" value="0" min="0" step="any">
+    </div>
+
+    <div>
+        <label for="days">Days</label>
+        <input type="number" id="days" value="0" min="0" step="any">
+    </div>
+</div>
+
+<label for="method">Interest Calculation Method</label>
+<select id="method">
+    <option value="simple">Simple Interest</option>
+    <option value="compound">Compound Interest</option>
+</select>
+
+<label for="frequency">Compounding Frequency</label>
+<select id="frequency">
+    <option value="1">Annually</option>
+    <option value="2">Half-yearly</option>
+    <option value="4">Quarterly</option>
+    <option value="12" selected>Monthly</option>
+    <option value="365">Daily</option>
+</select>
+
+<button onclick="calculate()">Calculate Interest</button>
+
+</div>
+
+<h3>Calculation Results</h3>
+
+<div class="result-box">
+
+    <div class="result">
+        <div class="result-title">Principal Amount</div>
+        <div class="result-value" id="outPrincipal">₹0.00</div>
+    </div>
+
+    <div class="result">
+        <div class="result-title">Interest Earned / Payable</div>
+        <div class="result-value" id="outInterest">₹0.00</div>
+    </div>
+
+    <div class="result highlight">
+        <div class="result-title">Total Amount / Maturity Value</div>
+        <div class="result-value" id="outTotal">₹0.00</div>
+    </div>
+
+</div>
+
+<div class="details" id="details">
+    Enter your values and click Calculate Interest.
+</div>
+
+<div class="footer">
+Interest Calculator | Simple and Compound Interest
+</div>
+
+</div>
+
+<script>
+
+const principal = document.getElementById("principal");
+const rate = document.getElementById("rate");
+const years = document.getElementById("years");
+const months = document.getElementById("months");
+const days = document.getElementById("days");
+const method = document.getElementById("method");
+const frequency = document.getElementById("frequency");
+
+const formatter = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
+
+function money(value) {
+    return formatter.format(value);
+}
+
+function calculate() {
+
+    const P = Number(principal.value);
+    const R = Number(rate.value);
+    const Y = Number(years.value);
+    const M = Number(months.value);
+    const D = Number(days.value);
+
+    if (
+        principal.value.trim() === "" ||
+        rate.value.trim() === "" ||
+        years.value.trim() === "" ||
+        months.value.trim() === "" ||
+        days.value.trim() === "" ||
+        ![P,R,Y,M,D].every(Number.isFinite) ||
+        P < 0 || R < 0 || Y < 0 || M < 0 || D < 0
+    ) {
+        alert("Please enter valid non-negative numbers.");
+        return;
+    }
+
+    // Standardized duration:
+    // 1 year = 12 months = 365 days.
+    const totalDays = (Y * 365) + (M * 365 / 12) + D;
+    const timeInYears = totalDays / 365;
+
+    let interest = 0;
+    let total = 0;
+
+    if (method.value === "simple") {
+
+        interest = P * (R / 100) * timeInYears;
+        total = P + interest;
+
+    } else {
+
+        const n = Number(frequency.value);
+        const periodicRate = R / (100 * n);
+
+        // Fractional compounding periods are allowed.
+        total = P * Math.pow(
+            1 + periodicRate,
+            n * timeInYears
+        );
+
+        interest = total - P;
+    }
+
+    if (!Number.isFinite(total)) {
+        alert("The calculated amount is too large.");
+        return;
+    }
+
+    document.getElementById("outPrincipal").textContent =
+        money(P);
+
+    document.getElementById("outInterest").textContent =
+        money(interest);
+
+    document.getElementById("outTotal").textContent =
+        money(total);
+
+    const methodName = method.value === "simple"
+        ? "Simple Interest"
+        : "Compound Interest";
+
+    const frequencyName = frequency.options[
+        frequency.selectedIndex
+    ].text;
+
+    document.getElementById("details").innerHTML = `
+        <strong>Calculation Details</strong><br>
+        Method: ${methodName}<br>
+        Principal: ${money(P)}<br>
+        Annual Interest Rate: ${R}%<br>
+        Duration: ${Y} years, ${M} months, ${D} days<br>
+        Standardized Duration: ${totalDays.toLocaleString("en-IN")} days<br>
+        Time in Years: ${timeInYears.toFixed(8)}<br>
+        ${method.value === "compound"
+            ? "Compounding Frequency: " + frequencyName + "<br>"
+            : ""}
+        Interest: ${money(interest)}<br>
+        <strong>Total Amount: ${money(total)}</strong>
+    `;
+}
+
+// Automatically recalculate when values change.
+[
+    principal, rate, years, months, days, method, frequency
+].forEach(element => {
+    element.addEventListener("input", calculate);
+    element.addEventListener("change", calculate);
+});
+
+calculate();
+
+</script>
+</body>
+</html>
