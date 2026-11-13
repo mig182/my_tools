@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Length Converter</title>
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 30px 16px;
+        font-family: Arial, sans-serif;
+        background: #f1f5f9;
+        color: #172033;
+    }
+
+    .container {
+        max-width: 850px;
+        margin: auto;
+    }
+
+    h1 {
+        text-align: center;
+        color: #2563eb;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #64748b;
+        margin-bottom: 28px;
+    }
+
+    .input-box {
+        background: white;
+        padding: 24px;
+        border-radius: 14px;
+        box-shadow: 0 3px 12px #0000000c;
+        margin-bottom: 22px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    input {
+        width: 100%;
+        padding: 15px;
+        font-size: 22px;
+        border: 2px solid #cbd5e1;
+        border-radius: 9px;
+        outline: none;
+    }
+
+    input:focus { border-color: #2563eb; }
+
+    .base-note {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 9px;
+    }
+
+    .results {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+    }
+
+    .result {
+        background: white;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px #0000000b;
+        border-left: 4px solid #3b82f6;
+        min-width: 0;
+    }
+
+    .unit {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 9px;
+    }
+
+    .value-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .value {
+        font-size: 19px;
+        font-weight: bold;
+        overflow-wrap: anywhere;
+    }
+
+    button {
+        border: none;
+        background: #eff6ff;
+        color: #2563eb;
+        padding: 7px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    button:hover { background: #dbeafe; }
+
+    .section-title {
+        margin: 28px 0 14px;
+        font-size: 18px;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Length Converter</h1>
+    <div class="subtitle">
+        Enter a value in metres to see all length conversions instantly.
+    </div>
+
+    <div class="input-box">
+        <label for="meters">Base Unit: Metre (m)</label>
+        <input
+            type="number"
+            id="meters"
+            value="1"
+            step="any"
+            placeholder="Enter length in metres"
+        >
+        <div class="base-note">
+            All conversions are calculated from metres.
+        </div>
+    </div>
+
+    <h3 class="section-title">Conversion Results</h3>
+    <div class="results" id="results"></div>
+
+    <div class="footer">
+        Length Converter | Metric and Imperial Units
+    </div>
+
+</div>
+
+<script>
+const units = [
+    { name: "Kilometre", symbol: "km", factor: 0.001 },
+    { name: "Hectometre", symbol: "hm", factor: 0.01 },
+    { name: "Decametre", symbol: "dam", factor: 0.1 },
+    { name: "Decimetre", symbol: "dm", factor: 10 },
+    { name: "Centimetre", symbol: "cm", factor: 100 },
+    { name: "Millimetre", symbol: "mm", factor: 1000 },
+    { name: "Micrometre", symbol: "µm", factor: 1e6 },
+    { name: "Nanometre", symbol: "nm", factor: 1e9 },
+    { name: "Mile", symbol: "mi", factor: 1 / 1609.344 },
+    { name: "Yard", symbol: "yd", factor: 1 / 0.9144 },
+    { name: "Foot", symbol: "ft", factor: 1 / 0.3048 },
+    { name: "Inch", symbol: "in", factor: 1 / 0.0254 },
+    { name: "Nautical Mile", symbol: "nmi", factor: 1 / 1852 },
+    { name: "Fathom", symbol: "ftm", factor: 1 / 1.8288 },
+    { name: "Thou (Mil)", symbol: "mil", factor: 1 / 0.0000254 }
+];
+
+const input = document.getElementById("meters");
+const results = document.getElementById("results");
+
+function formatNumber(number) {
+    if (!Number.isFinite(number)) return "Out of range";
+
+    return Number(number.toPrecision(12)).toLocaleString(
+        "en-US",
+        { maximumSignificantDigits: 12 }
+    );
+}
+
+function convert() {
+    const meters = Number(input.value);
+
+    results.innerHTML = "";
+
+    if (input.value.trim() === "" || !Number.isFinite(meters)) {
+        results.innerHTML =
+            "<p>Please enter a valid numerical value.</p>";
+        return;
+    }
+
+    units.forEach(unit => {
+        const converted = meters * unit.factor;
+
+        const card = document.createElement("div");
+        card.className = "result";
+
+        const label = document.createElement("div");
+        label.className = "unit";
+        label.textContent = unit.name + " (" + unit.symbol + ")";
+
+        const row = document.createElement("div");
+        row.className = "value-row";
+
+        const value = document.createElement("div");
+        value.className = "value";
+        value.textContent = formatNumber(converted);
+
+        const copy = document.createElement("button");
+        copy.textContent = "Copy";
+        copy.type = "button";
+        copy.setAttribute("aria-label", "Copy " + unit.name);
+
+        copy.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(String(converted));
+                copy.textContent = "Copied!";
+                setTimeout(() => copy.textContent = "Copy", 1200);
+            } catch {
+                copy.textContent = "Unavailable";
+            }
+        });
+
+        row.appendChild(value);
+        row.appendChild(copy);
+        card.appendChild(label);
+        card.appendChild(row);
+
+        results.appendChild(card);
+    });
+}
+
+input.addEventListener("input", convert);
+
+convert();
+</script>
+</body>
+</html>
