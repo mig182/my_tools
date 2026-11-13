@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Currency Converter</title>
+
+<style>
+body{
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#f5f7fa;
+    margin:0;
+    padding:20px;
+    color:#172033;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    border:1px solid #dce2ea;
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+h1{
+    text-align:center;
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+input,select{
+    width:100%;
+    padding:10px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+button{
+    cursor:pointer;
+}
+
+.action-btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:8px;
+    font-weight:bold;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#172033;
+    color:white;
+}
+
+th,td{
+    border:1px solid #dce2ea;
+    padding:8px;
+    text-align:left;
+}
+
+td.value{
+    text-align:right;
+}
+
+.star{
+    cursor:pointer;
+    font-size:18px;
+}
+
+.move{
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.favorite-row{
+    background:#fff8dc;
+}
+
+.small{
+    color:#666;
+    font-size:12px;
+}
+
+@media(max-width:800px){
+    .controls{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>🌍 All Currency Converter</h1>
+
+<div class="controls">
+
+<div>
+<label>Amount</label>
+<input id="amount" type="number" value="1" step="0.01">
+</div>
+
+<div>
+<label>Base Currency</label>
+<select id="base"></select>
+</div>
+
+<div>
+<label>Search Currency</label>
+<input id="search" placeholder="e.g. USD, INR, AED">
+</div>
+
+</div>
+
+<button class="action-btn" onclick="convertAll()">
+Refresh Rates
+</button>
+
+<p class="small" id="status">
+Loading...
+</p>
+
+</div>
+
+<div class="card">
+
+<table>
+
+<thead>
+<tr>
+<th>Fav</th>
+<th>Move</th>
+<th>Code</th>
+<th>Currency</th>
+<th>Value</th>
+</tr>
+</thead>
+
+<tbody id="results"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const currencyNames = {
+USD:"US Dollar",
+EUR:"Euro",
+GBP:"British Pound",
+INR:"Indian Rupee",
+AED:"UAE Dirham",
+AUD:"Australian Dollar",
+CAD:"Canadian Dollar",
+CHF:"Swiss Franc",
+CNY:"Chinese Yuan",
+HKD:"Hong Kong Dollar",
+JPY:"Japanese Yen",
+KRW:"South Korean Won",
+NZD:"New Zealand Dollar",
+SGD:"Singapore Dollar",
+THB:"Thai Baht",
+ZAR:"South African Rand",
+SEK:"Swedish Krona",
+NOK:"Norwegian Krone",
+DKK:"Danish Krone",
+PLN:"Polish Zloty",
+CZK:"Czech Koruna",
+HUF:"Hungarian Forint",
+TRY:"Turkish Lira",
+BRL:"Brazilian Real",
+MXN:"Mexican Peso",
+ARS:"Argentine Peso",
+IDR:"Indonesian Rupiah",
+MYR:"Malaysian Ringgit",
+PHP:"Philippine Peso",
+VND:"Vietnamese Dong",
+SAR:"Saudi Riyal",
+QAR:"Qatari Riyal",
+KWD:"Kuwaiti Dinar",
+BHD:"Bahraini Dinar",
+OMR:"Omani Rial",
+ILS:"Israeli Shekel",
+EGP:"Egyptian Pound",
+PKR:"Pakistani Rupee",
+BDT:"Bangladeshi Taka"
+};
+
+let rates={};
+
+let favorites=
+JSON.parse(localStorage.getItem("favorites") || "[]");
+
+let order=
+JSON.parse(localStorage.getItem("order") || "[]");
+
+function saveData(){
+localStorage.setItem("favorites",
+JSON.stringify(favorites));
+
+localStorage.setItem("order",
+JSON.stringify(order));
+}
+
+function setupCurrencies(){
+
+const base=document.getElementById("base");
+
+Object.keys(currencyNames)
+.sort()
+.forEach(code=>{
+
+const option=document.createElement("option");
+
+option.value=code;
+option.textContent=code+" - "+currencyNames[code];
+
+if(code==="INR"){
+option.selected=true;
+}
+
+base.appendChild(option);
+
+});
+
+if(order.length===0){
+
+order=Object.keys(currencyNames);
+
+saveData();
+
+}
+}
+
+function toggleFav(code){
+
+if(favorites.includes(code)){
+favorites=favorites.filter(x=>x!==code);
+}
+else{
+favorites.push(code);
+}
+
+saveData();
+renderTable();
+}
+
+function moveUp(code){
+
+const i=order.indexOf(code);
+
+if(i>0){
+
+[order[i-1],order[i]]=
+[order[i],order[i-1]];
+
+saveData();
+renderTable();
+
+}
+}
+
+function moveDown(code){
+
+const i=order.indexOf(code);
+
+if(i<order.length-1){
+
+[order[i+1],order[i]]=
+[order[i],order[i+1]];
+
+saveData();
+renderTable();
+
+}
+}
+
+async function convertAll(){
+
+try{
+
+document.getElementById("status")
+.innerText="Loading rates...";
+
+const base=document.getElementById("base").value;
+
+const url=
+`https://api.frankfurter.app/latest?from=${base}`;
+
+const response=await fetch(url);
+
+const data=await response.json();
+
+rates=data.rates;
+
+rates[base]=1;
+
+document.getElementById("status")
+.innerText=
+`Rates loaded for ${base}`;
+
+renderTable();
+
+}
+catch(err){
+
+document.getElementById("status")
+.innerText=
+"Unable to load rates.";
+
+console.error(err);
+}
+}
+
+function renderTable(){
+
+const amount=
+parseFloat(document.getElementById("amount").value)||0;
+
+const search=
+document.getElementById("search")
+.value
+.toUpperCase()
+.trim();
+
+let list=[...order];
+
+list.sort((a,b)=>{
+
+const af=favorites.includes(a)?0:1;
+const bf=favorites.includes(b)?0:1;
+
+if(af!==bf) return af-bf;
+
+return order.indexOf(a)-order.indexOf(b);
+
+});
+
+let html="";
+
+for(const code of list){
+
+if(search){
+
+const text=
+(code+" "+currencyNames[code])
+.toUpperCase();
+
+if(!text.includes(search)){
+continue;
+}
+}
+
+const rate=rates[code];
+
+if(rate===undefined) continue;
+
+const value=(amount*rate);
+
+html+=`
+<tr class="${favorites.includes(code)?'favorite-row':''}">
+<td>
+<span class="star"
+onclick="toggleFav('${code}')">
+${favorites.includes(code)?'⭐':'☆'}
+</span>
+</td>
+
+<td>
+<button class="move"
+onclick="moveUp('${code}')">▲</button>
+
+<button class="move"
+onclick="moveDown('${code}')">▼</button>
+</td>
+
+<td>${code}</td>
+
+<td>${currencyNames[code]}</td>
+
+<td class="value">
+${value.toLocaleString(undefined,{
+maximumFractionDigits:4
+})}
+</td>
+</tr>
+`;
+}
+
+document.getElementById("results").innerHTML=html;
+}
+
+document.getElementById("amount")
+.addEventListener("input",renderTable);
+
+document.getElementById("search")
+.addEventListener("input",renderTable);
+
+document.getElementById("base")
+.addEventListener("change",convertAll);
+
+setupCurrencies();
+convertAll();
+
+</script>
+
+</body>
+</html>
