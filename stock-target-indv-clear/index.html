@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stock Buy / Sell Calculator</title>
+<title>Stock Buy / Sell Calculator 2.0</title>
 
 <style>
 * {
@@ -12,7 +12,7 @@
 }
 
 body {
-  font-family: Segoe UI, Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   background: #f1f5f9;
   margin: 0;
   padding: 30px 12px;
@@ -20,11 +20,11 @@ body {
 }
 
 .card {
-  max-width: 520px;
+  max-width: 540px;
   margin: auto;
   background: white;
   border-radius: 16px;
-  padding: 28px;
+  padding: 26px;
   box-shadow: 0 8px 30px #1e293b18;
 }
 
@@ -36,12 +36,13 @@ h1 {
 .hint {
   color: #64748b;
   font-size: 14px;
-  margin-bottom: 22px;
+  line-height: 1.6;
+  margin-bottom: 20px;
 }
 
 label {
   display: block;
-  margin: 13px 0 5px;
+  margin: 14px 0 5px;
   font-weight: 600;
   font-size: 14px;
 }
@@ -58,6 +59,7 @@ input {
 
 input:focus {
   outline: 2px solid #93c5fd;
+  border-color: #3b82f6;
 }
 
 input.calculated {
@@ -91,20 +93,29 @@ input.loss {
   min-height: 14px;
 }
 
+.stock-input {
+  background: #f8fafc;
+}
+
 .buttons {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   margin-top: 22px;
 }
 
 button {
-  padding: 13px;
+  padding: 12px 8px;
   border-radius: 9px;
   border: 1px solid #cbd5e1;
   background: white;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
+  font-size: 13px;
+}
+
+button:hover {
+  background: #f1f5f9;
 }
 
 button.primary {
@@ -113,9 +124,13 @@ button.primary {
   color: white;
 }
 
+button.primary:hover {
+  background: #1d4ed8;
+}
+
 #message {
   margin-top: 15px;
-  font-size: 14px;
+  font-size: 13px;
   padding: 12px;
   border-radius: 8px;
   display: none;
@@ -132,11 +147,9 @@ button.primary {
   color: #065f46;
 }
 
-.foot {
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.6;
-  margin-top: 18px;
+.neutral {
+  background: #eff6ff;
+  color: #1e40af;
 }
 
 .legend {
@@ -144,7 +157,7 @@ button.primary {
   gap: 14px;
   flex-wrap: wrap;
   font-size: 12px;
-  margin-top: 16px;
+  margin-top: 17px;
   color: #64748b;
 }
 
@@ -165,13 +178,34 @@ button.primary {
 .green { background: #16a34a; }
 .red { background: #dc2626; }
 
+.instructions {
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 9px;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.foot {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+
 @media(max-width:480px) {
   .card {
-    padding: 20px;
+    padding: 19px;
   }
 
   h1 {
     font-size: 22px;
+  }
+
+  .buttons {
+    flex-wrap: wrap;
   }
 }
 </style>
@@ -184,13 +218,17 @@ button.primary {
 <h1>Stock Buy / Sell Calculator</h1>
 
 <p class="hint">
-Enter any 3 numerical values to calculate the other 2,
-when mathematically possible.
-Results update automatically.
+Enter any 3 numerical values to calculate the remaining 2.
+Results update automatically whenever you change an input.
 </p>
 
 <label for="stock">Stock Name (optional)</label>
-<input id="stock" type="text" placeholder="e.g. RELIANCE or TCS">
+<input
+  id="stock"
+  class="stock-input"
+  type="text"
+  placeholder="e.g. RELIANCE or TCS"
+>
 
 <div id="fields"></div>
 
@@ -201,18 +239,37 @@ Results update automatically.
 </div>
 
 <div class="buttons">
-  <button type="button" class="primary" onclick="clearAll()">
+
+  <button type="button" id="resetCalculated">
+    Reset Calculated
+  </button>
+
+  <button type="button" class="primary" id="clearAll">
     Clear All
   </button>
+
 </div>
 
 <div id="message" role="status" aria-live="polite"></div>
 
+<div class="instructions">
+  <strong>Smart Recalculation:</strong><br>
+  • Change any input to recalculate automatically.<br>
+  • Previous manual values are preserved.<br>
+  • You can edit calculated fields too.<br>
+  • Enter a fourth value and the oldest manual input
+  will automatically be replaced.<br>
+  • Reset Calculated clears results but preserves inputs.
+</div>
+
 <p class="foot">
 Change = (Sell Price - Buy Price) × Quantity.<br>
 Change % = (Sell Price - Buy Price) / Buy Price × 100.<br>
-Change represents total profit or loss before fees and taxes.
-Some combinations cannot uniquely determine the missing values.
+Change represents gross profit or loss before fees and taxes.
+<br><br>
+Note: Quantity can be fractional. All prices must be
+nonnegative, quantity must be positive, and Change %
+cannot be below -100%.
 </p>
 
 </main>
@@ -220,185 +277,319 @@ Some combinations cannot uniquely determine the missing values.
 <script>
 
 const labels = [
-  'Buy Price',
-  'Sell Price',
-  'Quantity',
-  'Change',
-  'Change %'
+  "Buy Price",
+  "Sell Price",
+  "Quantity",
+  "Change",
+  "Change %"
 ];
 
-const fields = document.getElementById('fields');
-const messageBox = document.getElementById('message');
+const fields = document.getElementById("fields");
+const messageBox = document.getElementById("message");
 
 const inputs = [];
 const fieldInfo = [];
 
-// Track manually entered fields separately from calculated fields.
-let manual = new Set();
+// Track manually entered and calculated fields.
+let manual = new Set([2]);
 let calculated = new Set();
+
+// Order of manual input determines which field
+// will be released when a fourth value is entered.
+let inputOrder = [2];
+
 let updating = false;
 
-// Create fields
+// Create input fields.
 labels.forEach((label, i) => {
 
-  const wrapper = document.createElement('div');
+  const wrapper = document.createElement("div");
 
-  const l = document.createElement('label');
-  l.htmlFor = 'v' + i;
+  const l = document.createElement("label");
+  l.htmlFor = "v" + i;
   l.textContent = label;
 
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.step = 'any';
-  input.id = 'v' + i;
-  input.placeholder = 'Enter ' + label;
+  const input = document.createElement("input");
 
-  // Default quantity = 1
+  input.type = "number";
+  input.step = "any";
+  input.id = "v" + i;
+  input.placeholder = "Enter " + label;
+
+  // Default quantity.
   if (i === 2) {
-    input.value = '1';
+    input.value = "1";
   }
 
-  const info = document.createElement('div');
-  info.className = 'field-info';
+  const info = document.createElement("div");
+  info.className = "field-info";
 
-  input.addEventListener('input', () => {
+  input.addEventListener("input", () => {
+
     if (updating) return;
 
-    // User is now the owner of this field.
-    calculated.delete(i);
-    manual.add(i);
+    handleInput(i);
 
-    clearFieldStyles(i);
-
-    // Recalculate using current manually entered values.
-    calculate();
   });
 
   wrapper.append(l, input, info);
+
   fields.append(wrapper);
 
   inputs.push(input);
   fieldInfo.push(info);
+
 });
 
+
+// Clear field styles.
 function clearFieldStyles(i) {
 
   inputs[i].classList.remove(
-    'calculated',
-    'invalid',
-    'profit',
-    'loss'
+    "calculated",
+    "invalid",
+    "profit",
+    "loss"
   );
 
-  fieldInfo[i].textContent = '';
+  fieldInfo[i].textContent = "";
+
 }
 
-function showMessage(text, error = false) {
+
+// Show messages.
+function showMessage(text, type = "neutral") {
 
   messageBox.textContent = text;
-  messageBox.style.display = text ? 'block' : 'none';
 
-  messageBox.className = error ? 'error' : 'success';
+  messageBox.style.display = text ? "block" : "none";
+
+  messageBox.className = type;
+
 }
 
-function clearAll() {
 
-  updating = true;
+// Read field values.
+function getValues() {
 
-  inputs.forEach(input => {
-    input.value = '';
+  return inputs.map(input => {
+
+    const value = input.value.trim();
+
+    return value === "" ? NaN : Number(value);
+
   });
 
-  // Reset manual/calculated tracking.
-  manual = new Set([2]);
-  calculated.clear();
+}
 
-  // Restore default quantity.
-  inputs[2].value = '1';
 
-  inputs.forEach((_, i) => clearFieldStyles(i));
+// Remove a field from manual tracking.
+function releaseManual(index) {
 
-  document.getElementById('stock').value = '';
+  manual.delete(index);
 
-  updating = false;
-
-  showMessage('');
+  inputOrder = inputOrder.filter(i => i !== index);
 
 }
 
-// Mark an invalid field
-function invalid(index, text) {
 
-  inputs[index].classList.add('invalid');
-  fieldInfo[index].textContent = text || 'Check this value';
-}
+// Handle all user input changes.
+function handleInput(index) {
 
-// Display profit/loss
-function applyResultStyle() {
+  const value = inputs[index].value.trim();
 
-  const change = Number(inputs[3].value);
+  clearFieldStyles(index);
 
-  if (!Number.isFinite(change)) return;
+  // User cleared an input.
+  if (value === "") {
 
-  if (change > 0) {
+    releaseManual(index);
 
-    inputs[3].classList.add('profit');
-    fieldInfo[3].textContent = 'Profit';
+    calculated.delete(index);
 
-  } else if (change < 0) {
+    calculate();
 
-    inputs[3].classList.add('loss');
-    fieldInfo[3].textContent = 'Loss';
+    return;
+  }
 
-  } else {
+  // A calculated field is now being edited manually.
+  calculated.delete(index);
 
-    fieldInfo[3].textContent = 'Break-even';
+  // Remove previous position if already manual.
+  releaseManual(index);
+
+  // Add this field as the newest manual input.
+  manual.add(index);
+
+  inputOrder.push(index);
+
+  // Keep exactly three manual inputs.
+  if (inputOrder.length > 3) {
+
+    const oldest = inputOrder.shift();
+
+    manual.delete(oldest);
+
+    calculated.delete(oldest);
+
+    inputs[oldest].value = "";
+
+    clearFieldStyles(oldest);
+
+    fieldInfo[oldest].textContent =
+      "Released for automatic calculation";
 
   }
 
-  // Apply the same result indication to percentage.
-  const percent = Number(inputs[4].value);
+  calculate();
 
-  if (Number.isFinite(percent)) {
-
-    if (percent > 0) {
-      inputs[4].classList.add('profit');
-    } else if (percent < 0) {
-      inputs[4].classList.add('loss');
-    }
-
-  }
 }
 
-// Display calculated values without overwriting manual fields.
+
+// Write calculated values.
 function writeCalculated(index, value) {
 
   if (manual.has(index)) return;
 
+  updating = true;
+
   inputs[index].value = Number(value.toFixed(8)).toString();
+
+  updating = false;
 
   calculated.add(index);
 
-  inputs[index].classList.add('calculated');
+  inputs[index].classList.add("calculated");
+
+  fieldInfo[index].textContent = "Auto calculated";
+
 }
 
-// Clear previous calculated values before recalculating.
-// Manual values are always preserved.
+
+// Clear calculated values only.
 function clearCalculatedValues() {
 
   updating = true;
 
   calculated.forEach(index => {
-    inputs[index].value = '';
+
+    inputs[index].value = "";
+
     clearFieldStyles(index);
+
   });
 
   calculated.clear();
 
   updating = false;
+
 }
 
-// Main calculation engine
+
+// Mark invalid fields.
+function invalid(index, text = "Check this value") {
+
+  inputs[index].classList.add("invalid");
+
+  fieldInfo[index].textContent = text;
+
+}
+
+
+// Display profit/loss.
+function applyResultStyle() {
+
+  const change = Number(inputs[3].value);
+
+  const percent = Number(inputs[4].value);
+
+  if (Number.isFinite(change)) {
+
+    if (change > 0) {
+
+      inputs[3].classList.add("profit");
+
+      fieldInfo[3].textContent =
+        (manual.has(3) ? "Manual · " : "") + "Profit";
+
+    } else if (change < 0) {
+
+      inputs[3].classList.add("loss");
+
+      fieldInfo[3].textContent =
+        (manual.has(3) ? "Manual · " : "") + "Loss";
+
+    } else {
+
+      fieldInfo[3].textContent = "Break-even";
+
+    }
+
+  }
+
+  if (Number.isFinite(percent)) {
+
+    if (percent > 0) {
+
+      inputs[4].classList.add("profit");
+
+    } else if (percent < 0) {
+
+      inputs[4].classList.add("loss");
+
+    }
+
+  }
+
+}
+
+
+// Reset only calculated fields.
+function resetCalculated() {
+
+  clearCalculatedValues();
+
+  inputs.forEach((_, i) => clearFieldStyles(i));
+
+  showMessage(
+    "Calculated values cleared. Your manual inputs are preserved.",
+    "success"
+  );
+
+}
+
+
+// Clear everything.
+function clearAll() {
+
+  updating = true;
+
+  inputs.forEach(input => {
+
+    input.value = "";
+
+  });
+
+  inputs[2].value = "1";
+
+  manual = new Set([2]);
+
+  calculated.clear();
+
+  inputOrder = [2];
+
+  inputs.forEach((_, i) => clearFieldStyles(i));
+
+  document.getElementById("stock").value = "";
+
+  updating = false;
+
+  showMessage("Calculator reset successfully.", "success");
+
+}
+
+
+// Main calculation engine.
 function calculate() {
 
   if (updating) return;
@@ -406,144 +597,186 @@ function calculate() {
   clearCalculatedValues();
 
   inputs.forEach((_, i) => {
-    inputs[i].classList.remove('invalid', 'profit', 'loss');
-    fieldInfo[i].textContent = '';
+
+    inputs[i].classList.remove(
+      "invalid",
+      "profit",
+      "loss"
+    );
+
+    if (!manual.has(i)) {
+      fieldInfo[i].textContent = "";
+    }
+
   });
 
-  showMessage('');
+  showMessage("");
 
   const active = [...manual].filter(i =>
-    inputs[i].value.trim() !== ''
+    inputs[i].value.trim() !== ""
   );
 
-  const count = active.length;
+  if (active.length < 3) {
 
-  if (count < 3) return;
-
-  if (count > 3) {
     showMessage(
-      'Please keep exactly 3 manually entered numerical values. Remove one input to calculate the remaining two.',
-      true
+      "Enter " + (3 - active.length) +
+      " more value(s) to calculate.",
+      "neutral"
     );
+
     return;
+
   }
 
-  const values = inputs.map(input =>
-    input.value.trim() === ''
-      ? NaN
-      : Number(input.value)
-  );
+  const values = getValues();
 
-  // Validate numerical input
-  for (const i of active) {
-
-    if (!Number.isFinite(values[i])) {
-      invalid(i, 'Enter a valid number');
-      showMessage('Please correct the highlighted field.', true);
-      return;
-    }
-  }
+  let [buy, sell, qty, change, percent] = values;
 
   const has = i => manual.has(i);
 
-  let [b, s, q, c, p] = values;
+  // Validate numerical inputs.
+  for (const i of active) {
 
-  let buy = b;
-  let sell = s;
-  let qty = q;
-  let change = c;
-  let percent = p;
+    if (!Number.isFinite(values[i])) {
 
+      invalid(i, "Enter a valid number");
+
+      showMessage(
+        "Please enter valid numerical values.",
+        "error"
+      );
+
+      return;
+
+    }
+
+  }
+
+  // Basic validation.
+  if (has(0) && buy <= 0) {
+
+    invalid(0, "Buy Price must be greater than zero");
+
+    showMessage(
+      "Buy Price must be greater than zero.",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if (has(1) && sell < 0) {
+
+    invalid(1, "Sell Price cannot be negative");
+
+    showMessage(
+      "Sell Price cannot be negative.",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if (has(2) && qty <= 0) {
+
+    invalid(2, "Quantity must be greater than zero");
+
+    showMessage(
+      "Quantity must be greater than zero.",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if (has(4) && percent < -100) {
+
+    invalid(4, "Change % cannot be below -100%");
+
+    showMessage(
+      "Change % cannot be below -100%.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  // Calculation helpers.
   function fail(text, indexes = active) {
 
     indexes.forEach(i => invalid(i));
 
-    showMessage(text, true);
+    showMessage(text, "error");
 
   }
 
-  // Validate known values.
-  if (has(0) && buy < 0) {
-    fail('Buy Price cannot be negative.', [0]);
-    return;
-  }
-
-  if (has(1) && sell < 0) {
-    fail('Sell Price cannot be negative.', [1]);
-    return;
-  }
-
-  if (has(2) && qty <= 0) {
-    fail('Quantity must be greater than zero.', [2]);
-    return;
-  }
 
   // BUY + SELL + QUANTITY
   if (has(0) && has(1) && has(2)) {
 
     change = (sell - buy) * qty;
 
-    if (buy === 0) {
-      fail('Change % cannot be calculated when Buy Price is zero.', [0]);
-      return;
-    }
-
     percent = ((sell - buy) / buy) * 100;
 
   }
+
 
   // BUY + SELL + CHANGE
   else if (has(0) && has(1) && has(3)) {
 
     if (sell === buy) {
-      fail('Quantity cannot be uniquely determined when prices are equal.');
+
+      fail(
+        "Quantity cannot be determined when Buy Price and Sell Price are equal."
+      );
+
       return;
+
     }
 
     qty = change / (sell - buy);
 
-    if (buy === 0) {
-      fail('Change % cannot be calculated when Buy Price is zero.', [0]);
-      return;
-    }
-
     percent = ((sell - buy) / buy) * 100;
 
   }
+
 
   // BUY + QUANTITY + CHANGE
   else if (has(0) && has(2) && has(3)) {
 
     sell = buy + change / qty;
 
-    if (buy === 0) {
-      fail('Change % cannot be calculated when Buy Price is zero.', [0]);
-      return;
-    }
-
     percent = ((sell - buy) / buy) * 100;
 
   }
 
+
   // BUY + QUANTITY + CHANGE %
   else if (has(0) && has(2) && has(4)) {
 
-    if (buy === 0) {
-      fail('Buy Price cannot be zero when using Change %.', [0]);
-      return;
-    }
-
     sell = buy * (1 + percent / 100);
+
     change = (sell - buy) * qty;
 
   }
 
+
   // BUY + CHANGE + CHANGE %
   else if (has(0) && has(3) && has(4)) {
 
-    if (buy === 0 || percent === 0) {
-      fail('These values cannot uniquely determine Sell Price and Quantity.');
+    if (percent === 0) {
+
+      fail(
+        "Zero Change % cannot uniquely determine both Sell Price and Quantity."
+      );
+
       return;
+
     }
 
     sell = buy * (1 + percent / 100);
@@ -551,27 +784,39 @@ function calculate() {
     qty = change / (sell - buy);
 
   }
+
 
   // SELL + QUANTITY + CHANGE
   else if (has(1) && has(2) && has(3)) {
 
     buy = sell - change / qty;
 
-    if (buy === 0) {
-      fail('Change % cannot be calculated when Buy Price is zero.');
+    if (buy <= 0) {
+
+      fail(
+        "These values produce an invalid Buy Price."
+      );
+
       return;
+
     }
 
     percent = ((sell - buy) / buy) * 100;
 
   }
 
+
   // SELL + QUANTITY + CHANGE %
   else if (has(1) && has(2) && has(4)) {
 
-    if (percent === -100) {
-      fail('Buy Price cannot be uniquely determined at -100%.', [4]);
+    if (percent <= -100) {
+
+      fail(
+        "Buy Price cannot be determined at -100%."
+      );
+
       return;
+
     }
 
     buy = sell / (1 + percent / 100);
@@ -580,12 +825,18 @@ function calculate() {
 
   }
 
+
   // SELL + CHANGE + CHANGE %
   else if (has(1) && has(3) && has(4)) {
 
-    if (percent === -100 || percent === 0) {
-      fail('These values cannot uniquely determine Buy Price and Quantity.');
+    if (percent === 0 || percent <= -100) {
+
+      fail(
+        "These values cannot uniquely determine Buy Price and Quantity."
+      );
+
       return;
+
     }
 
     buy = sell / (1 + percent / 100);
@@ -594,59 +845,121 @@ function calculate() {
 
   }
 
+
   // QUANTITY + CHANGE + CHANGE %
   else if (has(2) && has(3) && has(4)) {
 
     if (percent === 0) {
-      fail('Zero Change % cannot uniquely determine both prices.', [4]);
+
+      fail(
+        "Zero Change % cannot uniquely determine both prices."
+      );
+
       return;
+
     }
 
-    buy = 100 * change / (qty * percent);
+    buy = (100 * change) / (qty * percent);
 
     sell = buy + change / qty;
 
   }
 
+
   else {
-    fail('These values cannot uniquely determine the missing fields.');
+
+    fail(
+      "These values cannot uniquely determine the missing fields."
+    );
+
     return;
+
   }
 
-  const results = [buy, sell, qty, change, percent];
 
-  // Validate calculated results.
+  // Collect results.
+  const results = [
+    buy,
+    sell,
+    qty,
+    change,
+    percent
+  ];
+
+
+  // Validate all calculated results.
   for (let i = 0; i < results.length; i++) {
 
     if (!Number.isFinite(results[i])) {
-      fail('Calculation produced an undefined or invalid result.');
+
+      fail(
+        "Calculation produced an undefined or invalid result."
+      );
+
       return;
+
     }
+
   }
 
-  if (buy < 0 || sell < 0 || qty <= 0) {
 
-    fail('Calculated prices must be nonnegative and Quantity must be positive.');
+  // Final result validation.
+  if (buy <= 0 || sell < 0 || qty <= 0) {
+
+    fail(
+      "Calculated prices must be nonnegative, Buy Price must be positive, and Quantity must be positive."
+    );
 
     return;
+
   }
 
-  // Populate only fields that the user has not entered.
+  if (percent < -100) {
+
+    fail(
+      "Calculated Change % cannot be below -100%."
+    );
+
+    return;
+
+  }
+
+
+  // Populate missing fields only.
   results.forEach((value, i) => {
+
     if (!manual.has(i)) {
+
       writeCalculated(i, value);
+
     }
+
   });
 
+
+  // Display profit/loss.
   applyResultStyle();
 
-  showMessage('Calculation updated successfully.');
+  showMessage(
+    "Calculation updated successfully.",
+    "success"
+  );
 
 }
 
-// Initial state
+
+// Button events.
+document.getElementById("clearAll")
+  .addEventListener("click", clearAll);
+
+document.getElementById("resetCalculated")
+  .addEventListener("click", resetCalculated);
+
+
+// Initial state.
 calculate();
 
 </script>
+
 </body>
 </html>
