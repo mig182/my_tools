@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Area Converter</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #172033;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    color: #2563eb;
+}
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 28px;
+}
+
+.input-box {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 14px 0 9px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+input:focus, select:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit, minmax(220px, 1fr)
+    );
+    gap: 14px;
+}
+
+.result {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px #0000000b;
+    min-width: 0;
+}
+
+.unit {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.value {
+    font-size: 19px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+button {
+    border: none;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #dbeafe;
+}
+
+.section-title {
+    margin: 28px 0 14px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Area Converter</h1>
+
+<div class="subtitle">
+Select any base unit and convert it into all other area units.
+</div>
+
+<div class="input-box">
+
+<label for="baseUnit">Select Base Unit</label>
+<select id="baseUnit"></select>
+
+<label for="inputValue">Enter Value</label>
+<input
+    type="number"
+    id="inputValue"
+    value="1"
+    step="any"
+    placeholder="Enter area"
+>
+
+<p style="color:#64748b;font-size:13px">
+Conversions update automatically.
+</p>
+
+</div>
+
+<h3 class="section-title">Conversion Results</h3>
+
+<div class="results" id="results"></div>
+
+<div class="footer">
+Area Converter | Metric, Imperial and Traditional Units
+</div>
+
+</div>
+
+<script>
+
+// All conversion factors are expressed in square metres.
+
+const units = [
+
+    // Metric Square Units
+    {name:"Square Kilometre",symbol:"km²",factor:1e6},
+    {name:"Square Hectometre",symbol:"hm²",factor:1e4},
+    {name:"Hectare",symbol:"ha",factor:10000},
+    {name:"Square Decametre",symbol:"dam²",factor:100},
+    {name:"Are",symbol:"a",factor:100},
+    {name:"Square Metre",symbol:"m²",factor:1},
+    {name:"Square Decimetre",symbol:"dm²",factor:0.01},
+    {name:"Square Centimetre",symbol:"cm²",factor:0.0001},
+    {name:"Square Millimetre",symbol:"mm²",factor:1e-6},
+
+    // Metric Subdivisions
+    {name:"Square Micrometre",symbol:"µm²",factor:1e-12},
+
+    // Imperial Units
+    {name:"Square Mile",symbol:"mi²",factor:2589988.110336},
+    {name:"Square Yard",symbol:"yd²",factor:0.83612736},
+    {name:"Square Foot",symbol:"ft²",factor:0.09290304},
+    {name:"Square Inch",symbol:"in²",factor:0.00064516},
+
+    // Land Measurement Units
+    {name:"Acre",symbol:"ac",factor:4046.8564224},
+    {name:"Square Rod",symbol:"rd²",factor:25.29285264},
+    {name:"Square Chain",symbol:"ch²",factor:404.68564224},
+    {name:"Square Perch",symbol:"perch",factor:25.29285264},
+
+    // Indian Traditional Units
+    {name:"Guntha",symbol:"guntha",factor:101.17141056},
+    {name:"Bigha (Pucca)",symbol:"bigha",factor:2529.285264},
+    {name:"Katha (Bengal)",symbol:"katha",factor:66.8903},
+    {name:"Dhur",symbol:"dhur",factor:3.3445},
+
+    // Other Units
+    {name:"Barn",symbol:"b",factor:1e-28}
+];
+
+const baseSelect = document.getElementById("baseUnit");
+const input = document.getElementById("inputValue");
+const results = document.getElementById("results");
+
+// Populate dropdown
+
+units.forEach((unit, index) => {
+
+    const option = document.createElement("option");
+
+    option.value = index;
+
+    option.textContent =
+        unit.name + " (" + unit.symbol + ")";
+
+    if(unit.symbol === "m²") {
+        option.selected = true;
+    }
+
+    baseSelect.appendChild(option);
+
+});
+
+// Format numbers
+
+function formatNumber(number) {
+
+    if(!Number.isFinite(number)) {
+        return "Out of range";
+    }
+
+    return Number(number.toPrecision(12)).toLocaleString(
+        "en-US",
+        {maximumSignificantDigits:12}
+    );
+}
+
+// Conversion function
+
+function convert() {
+
+    results.innerHTML = "";
+
+    const value = Number(input.value);
+
+    const base = units[Number(baseSelect.value)];
+
+    if(
+        input.value.trim() === "" ||
+        !Number.isFinite(value)
+    ) {
+        results.textContent =
+            "Please enter a valid number.";
+        return;
+    }
+
+    // Convert input into square metres.
+
+    const squareMetres = value * base.factor;
+
+    units.forEach(unit => {
+
+        // Skip selected base unit.
+
+        if(unit.symbol === base.symbol) {
+            return;
+        }
+
+        // Convert square metres into target unit.
+
+        const converted = squareMetres / unit.factor;
+
+        const card = document.createElement("div");
+        card.className = "result";
+
+        const label = document.createElement("div");
+        label.className = "unit";
+
+        label.textContent =
+            unit.name + " (" + unit.symbol + ")";
+
+        const row = document.createElement("div");
+        row.className = "value-row";
+
+        const output = document.createElement("div");
+        output.className = "value";
+
+        output.textContent = formatNumber(converted);
+
+        const copy = document.createElement("button");
+
+        copy.textContent = "Copy";
+        copy.type = "button";
+
+        copy.addEventListener("click", async () => {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    String(converted)
+                );
+
+                copy.textContent = "Copied!";
+
+                setTimeout(() => {
+                    copy.textContent = "Copy";
+                }, 1200);
+
+            } catch {
+
+                copy.textContent = "Unavailable";
+
+            }
+
+        });
+
+        row.appendChild(output);
+        row.appendChild(copy);
+
+        card.appendChild(label);
+        card.appendChild(row);
+
+        results.appendChild(card);
+
+    });
+
+}
+
+// Automatic conversion
+
+input.addEventListener("input", convert);
+
+baseSelect.addEventListener("change", convert);
+
+// Initial conversion
+
+convert();
+
+</script>
+
+</body>
+</html>
